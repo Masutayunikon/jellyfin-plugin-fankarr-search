@@ -23,7 +23,6 @@ jobs:
       - name: Install JPRM
         run: pip install jprm
 
-      # Build le DLL d'abord
       - name: Dotnet publish
         run: |
           dotnet publish \
@@ -31,13 +30,13 @@ jobs:
             -c Release \
             -o ./publish
 
-      # JPRM package le DLL en zip Jellyfin-compatible
       - name: Package with JPRM
         run: |
+          mkdir -p Jellyfin.Plugin.FanKarrSearch/bin/Release/net9.0/
+          cp ./publish/*.dll Jellyfin.Plugin.FanKarrSearch/bin/Release/net9.0/
           jprm plugin build \
             --version="${GITHUB_REF_NAME#v}" \
             --output=./artifacts \
-            --binary-path=./publish \
             .
 
       - name: Create GitHub Release
