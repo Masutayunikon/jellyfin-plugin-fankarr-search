@@ -1,0 +1,85 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*.*"   # déclenché sur un tag type v1.0.0.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # nécessaire pour créer la Release et pousser le manifest
+
+    steps:
+      # -----------------------------------------------------------------------
+      # 1. Checkout du code
+      # -----------------------------------------------------------------------
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # -----------------------------------------------------------------------
+      # 2. Setup .NET 8
+      # -----------------------------------------------------------------------
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      # -----------------------------------------------------------------------
+      # 3. Install JPRM (Jellyfin Plugin Repository Manager)
+      # -----------------------------------------------------------------------
+      - name: Install JPRM
+        run: pip install jprm
+
+      # -----------------------------------------------------------------------
+      # 4. Build du plugin via JPRM
+      #    JPRM lit build.yaml, compile le projet et génère un .zip prêt pour Jellyfin
+      # -----------------------------------------------------------------------
+      - name: Build plugin
+        run: |
+          jprm plugin build \
+            --version="${GITHUB_REF_NAME#v}" \
+            --output=./artifacts \
+            .
+
+      # -----------------------------------------------------------------------
+      # 5. Créer la GitHub Release avec le zip en pièce jointe
+      # -----------------------------------------------------------------------
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./artifacts/*.zip
+          generate_release_notes: true
+
+      # -----------------------------------------------------------------------
+      # 6. Mettre à jour le manifest.json sur la branche gh-pages
+      #    C'est ce fichier que tu ajoutes dans Jellyfin comme repository URL
+      # -----------------------------------------------------------------------
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Update manifest
+        run: |
+          mkdir -p gh-pages
+          # Initialise le manifest s'il n'existe pas encore
+          if [ ! -f gh-pages/manifest.json ]; then
+            jprm repo init gh-pages/
+          fi
+          # Ajoute/met à jour la version dans le manifest
+          jprm repo add \
+            --plugin-url="https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/$(ls artifacts/*.zip | xargs basename)" \
+            gh-pages/ \
+            ./artifacts/*.zip
+
+      - name: Push manifest to gh-pages
+        run: |
+          cd gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add manifest.json
+          git diff --staged --quiet || git commit -m "Update manifest for ${GITHUB_REF_NAME}"
+          git push

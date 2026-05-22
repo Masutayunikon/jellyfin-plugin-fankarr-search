@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Jellyfin.Plugin.FanKarrSearch</name>
+    </assembly>
+    <members>
+        <member name="T:Jellyfin.Plugin.FanKarrSearch.Configuration.PluginConfiguration">
+            <summary>
+            Plugin configuration stored in Jellyfin's config directory.
+            </summary>
+        </member>
+        <member name="P:Jellyfin.Plugin.FanKarrSearch.Configuration.PluginConfiguration.ApiUrl">
+            <summary>
+            Gets or sets the base URL of the FanKarr API.
+            Example: https://fankarr.example.com
+            </summary>
+        </member>
+        <member name="T:Jellyfin.Plugin.FanKarrSearch.Controllers.FanKarrSearchController">
+            <summary>
+            Exposes two endpoints consumed by the injected JS:
+              GET /FanKarr/config   → returns the configured API URL (JSON)
+              GET /FanKarr/script.js → serves the embedded JS file
+            </summary>
+        </member>
+        <member name="T:Jellyfin.Plugin.FanKarrSearch.Plugin">
+            <summary>
+            FanKarr plugin entry point.
+            Injects a small JS loader into Jellyfin's index.html at startup.
+            The JS then calls the /FanKarr/config endpoint to get the API URL
+            and hooks into the Jellyfin search UI.
+            </summary>
+        </member>
+        <member name="F:Jellyfin.Plugin.FanKarrSearch.Plugin.StaticId">
+            <summary>Unique, stable plugin ID.</summary>
+        </member>
+        <member name="P:Jellyfin.Plugin.FanKarrSearch.Plugin.Name">
+            <inheritdoc />
+        </member>
+        <member name="P:Jellyfin.Plugin.FanKarrSearch.Plugin.Id">
+            <inheritdoc />
+        </member>
+        <member name="P:Jellyfin.Plugin.FanKarrSearch.Plugin.Description">
+            <inheritdoc />
+        </member>
+        <member name="P:Jellyfin.Plugin.FanKarrSearch.Plugin.Instance">
+            <summary>Singleton access used by the controller.</summary>
+        </member>
+        <member name="M:Jellyfin.Plugin.FanKarrSearch.Plugin.GetPages">
+            <inheritdoc />
+        </member>
+        <member name="M:Jellyfin.Plugin.FanKarrSearch.Plugin.InjectScript">
+            <summary>
+            Appends a &lt;script&gt; tag pointing to our API endpoint into
+            Jellyfin's index.html so it loads on every page.
+            </summary>
+        </member>
+    </members>
+</doc>

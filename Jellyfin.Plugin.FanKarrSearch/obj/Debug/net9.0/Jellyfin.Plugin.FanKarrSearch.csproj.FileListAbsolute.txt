@@ -1,0 +1,14 @@
+C:\Users\yunik\WebstormProjects\jellyfin-plugin-fankarr-search\Jellyfin.Plugin.FanKarrSearch\obj\Debug\net9.0\Jellyfin.Plugin.FanKarrSearch.csproj.AssemblyReference.cache
+C:\Users\yunik\WebstormProjects\jellyfin-plugin-fankarr-search\Jellyfin.Plugin.FanKarrSearch\obj\Debug\net9.0\Jellyfin.Plugin.FanKarrSearch.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\yunik\WebstormProjects\jellyfin-plugin-fankarr-search\Jellyfin.Plugin.FanKarrSearch\obj\Debug\net9.0\Jellyfin.Plugin.FanKarrSearch.AssemblyInfoInputs.cache
+C:\Users\yunik\WebstormProjects\jellyfin-plugin-fankarr-search\Jellyfin.Plugin.FanKarrSearch\obj\Debug\net9.0\Jellyfin.Plugin.FanKarrSearch.AssemblyInfo.cs
+C:\Users\yunik\WebstormProjects\jellyfin-plugin-fankarr-search\Jellyfin.Plugin.FanKarrSearch\obj\Debug\net9.0\Jellyfin.Plugin.FanKarrSearch.csproj.CoreCompileInputs.cache
+C:\Users\yunik\WebstormProjects\jellyfin-plugin-fankarr-search\Jellyfin.Plugin.FanKarrSearch\bin\Debug\net9.0\Jellyfin.Plugin.FanKarrSearch.deps.json
+C:\Users\yunik\WebstormProjects\jellyfin-plugin-fankarr-search\Jellyfin.Plugin.FanKarrSearch\bin\Debug\net9.0\Jellyfin.Plugin.FanKarrSearch.dll
+C:\Users\yunik\WebstormProjects\jellyfin-plugin-fankarr-search\Jellyfin.Plugin.FanKarrSearch\bin\Debug\net9.0\Jellyfin.Plugin.FanKarrSearch.pdb
+C:\Users\yunik\WebstormProjects\jellyfin-plugin-fankarr-search\Jellyfin.Plugin.FanKarrSearch\bin\Debug\net9.0\Jellyfin.Plugin.FanKarrSearch.xml
+C:\Users\yunik\WebstormProjects\jellyfin-plugin-fankarr-search\Jellyfin.Plugin.FanKarrSearch\obj\Debug\net9.0\Jellyfin.Plugin.FanKarrSearch.dll
+C:\Users\yunik\WebstormProjects\jellyfin-plugin-fankarr-search\Jellyfin.Plugin.FanKarrSearch\obj\Debug\net9.0\refint\Jellyfin.Plugin.FanKarrSearch.dll
+C:\Users\yunik\WebstormProjects\jellyfin-plugin-fankarr-search\Jellyfin.Plugin.FanKarrSearch\obj\Debug\net9.0\Jellyfin.Plugin.FanKarrSearch.xml
+C:\Users\yunik\WebstormProjects\jellyfin-plugin-fankarr-search\Jellyfin.Plugin.FanKarrSearch\obj\Debug\net9.0\Jellyfin.Plugin.FanKarrSearch.pdb
+C:\Users\yunik\WebstormProjects\jellyfin-plugin-fankarr-search\Jellyfin.Plugin.FanKarrSearch\obj\Debug\net9.0\ref\Jellyfin.Plugin.FanKarrSearch.dll

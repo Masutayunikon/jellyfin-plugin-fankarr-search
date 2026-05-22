@@ -1,0 +1,12 @@
+---
+version: "1.0.0.0"
+name: "FanKarrSearch"
+guid: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+overview: "Intègre FanKarr dans la recherche Jellyfin pour demander des médias directement depuis l'interface."
+description: "Affiche les résultats FanKarr dans la recherche Jellyfin et permet de faire des demandes en un clic."
+category: "General"
+owner: "toi"
+artifacts:
+  - "Jellyfin.Plugin.FanKarrSearch.dll"
+targetAbi: "10.11.0.0"
+framework: "net9.0"
