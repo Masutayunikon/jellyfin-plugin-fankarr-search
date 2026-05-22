@@ -20,9 +20,6 @@ jobs:
         with:
           dotnet-version: "9.0.x"
 
-      - name: Install JPRM
-        run: pip install jprm
-
       - name: Dotnet publish
         run: |
           dotnet publish \
@@ -30,14 +27,28 @@ jobs:
             -c Release \
             -o ./publish
 
-      - name: Package with JPRM
+      - name: Package plugin
         run: |
-          mkdir -p Jellyfin.Plugin.FanKarrSearch/bin/Release/net9.0/
-          cp ./publish/*.dll Jellyfin.Plugin.FanKarrSearch/bin/Release/net9.0/
-          jprm plugin build \
-            --version="${GITHUB_REF_NAME#v}" \
-            --output=./artifacts \
-            .
+          VERSION="${GITHUB_REF_NAME#v}"
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          mkdir -p ./artifacts
+          cat > ./publish/meta.json << EOF
+          {
+            "category": "General",
+            "guid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            "name": "FanKarr Search",
+            "overview": "Intègre FanKarr dans la recherche Jellyfin.",
+            "description": "Affiche les résultats FanKarr dans la recherche Jellyfin et permet de faire des demandes en un clic.",
+            "owner": "toi",
+            "version": "${VERSION}",
+            "targetAbi": "10.11.0.0",
+            "timestamp": "${TIMESTAMP}"
+          }
+          EOF
+          cd ./publish
+          zip -j "../artifacts/Jellyfin.Plugin.FanKarrSearch_${VERSION}.zip" \
+            Jellyfin.Plugin.FanKarrSearch.dll \
+            meta.json
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -53,14 +64,32 @@ jobs:
 
       - name: Update manifest
         run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          ZIPNAME="Jellyfin.Plugin.FanKarrSearch_${VERSION}.zip"
+          CHECKSUM=$(md5sum ./artifacts/${ZIPNAME} | cut -d' ' -f1)
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
           mkdir -p gh-pages
-          if [ ! -f gh-pages/manifest.json ]; then
-            jprm repo init gh-pages/
-          fi
-          jprm repo add \
-            --plugin-url="https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/$(ls artifacts/*.zip | xargs basename)" \
-            gh-pages/ \
-            ./artifacts/*.zip
+          cat > gh-pages/manifest.json << EOF
+          [
+            {
+              "category": "General",
+              "guid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+              "name": "FanKarr Search",
+              "overview": "Intègre FanKarr dans la recherche Jellyfin.",
+              "description": "Affiche les résultats FanKarr dans la recherche Jellyfin et permet de faire des demandes en un clic.",
+              "owner": "toi",
+              "versions": [
+                {
+                  "version": "${VERSION}",
+                  "targetAbi": "10.11.0.0",
+                  "sourceUrl": "https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/${ZIPNAME}",
+                  "checksum": "${CHECKSUM}",
+                  "timestamp": "${TIMESTAMP}"
+                }
+              ]
+            }
+          ]
+          EOF
 
       - name: Push manifest to gh-pages
         run: |
