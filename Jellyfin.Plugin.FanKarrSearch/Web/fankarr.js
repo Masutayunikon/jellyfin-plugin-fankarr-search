@@ -396,7 +396,7 @@
   // ---------------------------------------------------------------------------
 
   function syncGridPadding(container, grid) {
-    const ref = container.querySelector('.padded-left:not(#${SECTION_ID} *)');
+    const ref = container.querySelector('.padded-left');
     if (ref && grid) {
       const pl = getComputedStyle(ref).paddingLeft;
       const pr = getComputedStyle(ref).paddingRight;
