@@ -105,104 +105,38 @@
   const SECTION_ID = 'fankarr-results-section';
 
   const STYLES = `
-    #${SECTION_ID} {
-      padding: 1.5em 1.5em 0.5em;
-      font-family: var(--font-family, inherit);
-    }
-    #${SECTION_ID} .fankarr-header {
-      display: flex;
-      align-items: center;
-      gap: 0.5em;
-      margin-bottom: 0.75em;
-      font-size: 1.1em;
-      font-weight: 600;
-      font-family: var(--font-family, inherit);
-      color: var(--text-color, #fff);
-      text-transform: var(--header-text-transform, none);
-      letter-spacing: var(--header-letter-spacing, normal);
-    }
-    #${SECTION_ID} .fankarr-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5em;
-    }
-    #${SECTION_ID} .fankarr-card {
-      width: var(--card-portrait-width, 130px);
-      position: relative;
-      font-family: var(--font-family, inherit);
-    }
-    #${SECTION_ID} .fankarr-card img {
-      width: 100%;
-      border-radius: var(--card-border-radius, 4px);
-      aspect-ratio: 2/3;
-      object-fit: cover;
-      display: block;
-    }
-    #${SECTION_ID} .fankarr-card .fankarr-title {
-      font-size: var(--card-text-size, 0.8em);
-      margin-top: 4px;
-      text-align: center;
-      color: var(--text-color, #fff);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-family: var(--font-family, inherit);
-    }
-    #${SECTION_ID} .fankarr-card .fankarr-meta {
-      font-size: calc(var(--card-text-size, 0.8em) * 0.9);
-      text-align: center;
-      color: var(--text-color-secondary, #aaa);
-      font-family: var(--font-family, inherit);
-    }
-    #${SECTION_ID} .fankarr-card .fankarr-badge {
-      position: absolute;
-      top: 4px;
-      left: 4px;
-      background: var(--accent-color, #00a4dc);
-      color: #fff;
-      font-size: 0.6em;
-      font-weight: 700;
-      padding: 2px 5px;
-      border-radius: 3px;
-      text-transform: uppercase;
-      font-family: var(--font-family, inherit);
-    }
-    #${SECTION_ID} .fankarr-btn {
-      display: block;
-      width: 100%;
-      margin-top: 5px;
-      padding: 6px 0;
-      border: none;
-      border-radius: var(--button-border-radius, var(--card-border-radius, 4px));
-      background: var(--accent-color, #00a4dc);
-      color: #fff;
-      font-size: 0.75em;
-      font-weight: 600;
-      font-family: var(--font-family, inherit);
-      cursor: pointer;
-      transition: filter 0.15s;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    #${SECTION_ID} .fankarr-btn:hover {
-      filter: brightness(1.15);
-    }
-    #${SECTION_ID} .fankarr-btn:disabled {
-      background: var(--card-background, #333);
-      color: var(--text-color-secondary, #aaa);
-      cursor: default;
-      filter: none;
-    }
-    #${SECTION_ID} .fankarr-btn.requested {
-      background: var(--success-color, #2e7d32);
-      color: #fff;
-    }
-    #${SECTION_ID} .fankarr-empty {
-      color: var(--text-color-secondary, #aaa);
-      font-size: 0.9em;
-      font-family: var(--font-family, inherit);
-    }
-  `;
+  #${SECTION_ID} {
+    padding: 1.5em 1.5em 0.5em;
+  }
+  #${SECTION_ID} .fankarr-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    margin-bottom: 0.75em;
+    font-size: 1.1em;
+    font-weight: 600;
+  }
+  #${SECTION_ID} .fankarr-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+  }
+  #${SECTION_ID} .fankarr-card {
+    width: 130px;
+    position: relative;
+  }
+  #${SECTION_ID} .fankarr-card img {
+    width: 100%;
+    aspect-ratio: 2/3;
+    object-fit: cover;
+    display: block;
+  }
+  #${SECTION_ID} .fankarr-btn {
+    display: block;
+    width: 100%;
+    margin-top: 5px;
+  }
+`;
 
   function injectStyles() {
     if (document.getElementById('fankarr-styles')) return;
@@ -237,29 +171,34 @@
       card.className = 'fankarr-card';
 
       const isRequested = requestedIds.has(item.id);
-      const type = item.type === 'series' ? 'SÉRIE' : 'FILM';
-      const year = item.year || '';
-      const poster = item.image
-          ? item.image
-          : item.posterPath
-              ? `https://image.tmdb.org/t/p/w200${item.posterPath}`
-              : null;
+      const type = item.available ? 'DISPONIBLE' : (item.type === 'series' ? 'SÉRIE' : 'FILM');
+      const poster = item.image || (item.posterPath ? `https://image.tmdb.org/t/p/w200${item.posterPath}` : null);
 
       const imgHtml = poster
-          ? `<img src="${escapeHtml(poster)}" alt="${escapeHtml(item.title)}" loading="lazy" />`
-          : `<div style="width:100%;aspect-ratio:2/3;background:var(--card-background,#333);border-radius:var(--card-border-radius,4px);display:flex;align-items:center;justify-content:center;color:var(--text-color-secondary,#aaa);font-size:0.7em;">No Image</div>`;
+          ? `<img src="${escapeHtml(poster)}" alt="${escapeHtml(item.title)}" loading="lazy" class="cardContent coveredImage" />`
+          : `<div class="cardContent defaultCardBackground defaultCardBackground1" style="aspect-ratio:2/3;display:flex;align-items:center;justify-content:center;"><span class="cardImageIcon material-icons tv" aria-hidden="true"></span></div>`;
 
       card.innerHTML = `
-        <span class="fankarr-badge">${type}</span>
-        ${imgHtml}
-        <div class="fankarr-title" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</div>
-        <div class="fankarr-meta">${escapeHtml(String(year))}</div>
-        <button
-          class="fankarr-btn${isRequested ? ' requested' : ''}"
-          data-id="${item.id}"
-          ${isRequested ? 'disabled' : ''}
-        >${isRequested ? '✓ Demandé' : '+ Demander'}</button>
-      `;
+      <div class="card portraitCard card-withuserdata">
+        <div class="cardBox">
+          <div class="cardScalable">
+            <div class="cardPadder cardPadder-portrait"></div>
+            ${imgHtml}
+            <div class="cardIndicators">
+              <div class="cardIndicator cardIndicator-right">
+                <span style="background:var(--accent-color,var(--accent,#00a4dc));color:#fff;font-size:0.6em;font-weight:700;padding:2px 5px;border-radius:3px;text-transform:uppercase;">${type}</span>
+              </div>
+            </div>
+          </div>
+          <div class="cardText cardTextCentered">${escapeHtml(item.title)}</div>
+          <div class="cardText cardTextCentered cardText-secondary">${item.year || ''}</div>
+        </div>
+      </div>
+      <button
+        class="fankarr-btn raised emby-button${isRequested ? ' button-submit' : ''}"
+        ${isRequested ? 'disabled' : ''}
+      >${isRequested ? '✓ Demandé' : '+ Demander'}</button>
+    `;
 
       const btn = card.querySelector('.fankarr-btn');
       if (!isRequested) {
