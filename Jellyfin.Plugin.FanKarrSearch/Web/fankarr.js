@@ -35,13 +35,10 @@
   async function authenticate() {
     const credentials = localStorage.getItem('jellyfin_credentials');
     if (!credentials) { console.warn('[FanKarr] Token Jellyfin introuvable.'); return false; }
-
     const parsed = JSON.parse(credentials);
     const jellyfinToken = parsed?.Servers?.[0]?.AccessToken;
     const jellyfinUserId = parsed?.Servers?.[0]?.UserId;
-
     if (!jellyfinToken || !jellyfinUserId) { console.warn('[FanKarr] Token ou UserId introuvable.'); return false; }
-
     try {
       const res = await fetch(`${API_URL}/api/v1/auth/jellyfin`, {
         method: 'POST',
@@ -90,6 +87,16 @@
     #${SECTION_ID} {
       padding: 0.5em 0 1em;
     }
+    #${SECTION_ID} .fankarr-section-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+    }
+    #${SECTION_ID} .fankarr-logo {
+      height: 1em;
+      width: auto;
+      vertical-align: middle;
+    }
     #${SECTION_ID} .fankarr-grid {
       display: flex;
       flex-wrap: wrap;
@@ -97,31 +104,80 @@
       padding: 0.5em 1em;
     }
     #${SECTION_ID} .fankarr-card {
-      width: 130px;
       position: relative;
       cursor: pointer;
+    }
+    #${SECTION_ID} .fankarr-badge {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      z-index: 2;
+      background: var(--accent-color, var(--accent, #00a4dc));
+      color: #fff;
+      font-size: 0.6em;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      pointer-events: none;
     }
     #${SECTION_ID} .fankarr-overlay {
       position: absolute;
       inset: 0;
-      background: rgba(0,0,0,0.55);
+      background: rgba(0,0,0,0.72);
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
+      gap: 0.4em;
       opacity: 0;
       transition: opacity 0.2s ease;
       border-radius: inherit;
-      padding: 0.5em;
+      padding: 0.6em;
       box-sizing: border-box;
+      z-index: 3;
     }
     #${SECTION_ID} .fankarr-card:hover .fankarr-overlay {
       opacity: 1;
     }
+    #${SECTION_ID} .fankarr-overlay-title {
+      color: #fff;
+      font-size: 0.78em;
+      font-weight: 600;
+      text-align: center;
+      line-height: 1.3;
+      max-height: 4em;
+      overflow: hidden;
+      word-break: break-word;
+    }
     #${SECTION_ID} .fankarr-btn {
-      width: 100%;
-      font-size: 0.75em;
-      padding: 0.5em 0.25em;
+      width: 90%;
+      font-size: 0.72em;
+      padding: 0.45em 0.25em;
       white-space: nowrap;
+    }
+    #${SECTION_ID} .fankarr-card .cardText-first {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: clip;
+    }
+    #${SECTION_ID} .fankarr-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4em;
+      font-size: 0.72em;
+      color: var(--text-color-secondary, #aaa);
+      margin-top: 1px;
+    }
+    #${SECTION_ID} .fankarr-rating {
+      display: flex;
+      align-items: center;
+      gap: 0.2em;
+    }
+    #${SECTION_ID} .fankarr-rating-star {
+      color: #f5c518;
     }
 
     /* ── Backdrop ── */
@@ -134,13 +190,9 @@
       align-items: flex-end;
       justify-content: center;
     }
-    #${MODAL_ID}-backdrop.open {
-      display: flex;
-    }
+    #${MODAL_ID}-backdrop.open { display: flex; }
     @media (min-width: 600px) {
-      #${MODAL_ID}-backdrop {
-        align-items: center;
-      }
+      #${MODAL_ID}-backdrop { align-items: center; }
     }
 
     /* ── Modale ── */
@@ -158,9 +210,7 @@
       transform: translateY(100%);
       transition: transform 0.3s ease;
     }
-    #${MODAL_ID}-backdrop.open #${MODAL_ID} {
-      transform: translateY(0);
-    }
+    #${MODAL_ID}-backdrop.open #${MODAL_ID} { transform: translateY(0); }
     @media (min-width: 600px) {
       #${MODAL_ID} {
         border-radius: 12px;
@@ -169,10 +219,7 @@
         opacity: 0;
         transition: transform 0.2s ease, opacity 0.2s ease;
       }
-      #${MODAL_ID}-backdrop.open #${MODAL_ID} {
-        transform: scale(1);
-        opacity: 1;
-      }
+      #${MODAL_ID}-backdrop.open #${MODAL_ID} { transform: scale(1); opacity: 1; }
     }
     #${MODAL_ID} .fankarr-modal-header {
       display: flex;
@@ -203,9 +250,7 @@
       line-height: 1;
       flex-shrink: 0;
     }
-    #${MODAL_ID} .fankarr-modal-close:hover {
-      color: var(--text-color, #fff);
-    }
+    #${MODAL_ID} .fankarr-modal-close:hover { color: var(--text-color, #fff); }
     #${MODAL_ID} .fankarr-modal-subtitle {
       font-size: 0.85em;
       color: var(--text-color-secondary, #aaa);
@@ -224,10 +269,7 @@
       margin-bottom: 0.75em;
       transition: border-color 0.15s, color 0.15s;
     }
-    #${MODAL_ID} .fankarr-select-all:hover {
-      border-color: var(--accent-color, var(--accent, #00a4dc));
-      color: var(--accent-color, var(--accent, #00a4dc));
-    }
+    #${MODAL_ID} .fankarr-select-all:hover,
     #${MODAL_ID} .fankarr-select-all.selected {
       border-color: var(--accent-color, var(--accent, #00a4dc));
       color: var(--accent-color, var(--accent, #00a4dc));
@@ -263,12 +305,8 @@
       gap: 0.75em;
       margin-top: 1em;
     }
-    #${MODAL_ID} .fankarr-modal-cancel {
-      flex: 1;
-    }
-    #${MODAL_ID} .fankarr-modal-submit {
-      flex: 2;
-    }
+    #${MODAL_ID} .fankarr-modal-cancel { flex: 1; }
+    #${MODAL_ID} .fankarr-modal-submit { flex: 2; }
     #${MODAL_ID} .fankarr-modal-loading {
       text-align: center;
       padding: 2em 0;
@@ -380,10 +418,9 @@
 
         <div class="fankarr-seasons-grid">
           ${seasons.map(s => `
-            <button
-              class="fankarr-season-btn${selectedSeasons.has(s.season_number) ? ' selected' : ''}"
-              data-season="${s.season_number}"
-            >Saison ${s.season_number}</button>
+            <button class="fankarr-season-btn${selectedSeasons.has(s.season_number) ? ' selected' : ''}" data-season="${s.season_number}">
+              Saison ${s.season_number}
+            </button>
           `).join('')}
         </div>
 
@@ -435,7 +472,6 @@
           `;
           modal.querySelector('button').addEventListener('click', closeModal);
 
-          // Mettre à jour le bouton de la card
           const card = document.querySelector(`[data-fankarr-id="${item.id}"]`);
           if (card) {
             const btn = card.querySelector('.fankarr-btn');
@@ -456,33 +492,23 @@
   // 6. UI — section et cards
   // ---------------------------------------------------------------------------
 
-  function insertSection(section, container) {
-    const allSections = container.querySelectorAll('.verticalSection');
-    let targetSection = null;
-    for (const s of allSections) {
-      const title = s.querySelector('.sectionTitle')?.textContent?.toLowerCase() || '';
-      if (title.includes('épisode')) { targetSection = s; break; }
-    }
-    if (targetSection) {
-      container.insertBefore(section, targetSection);
-    } else {
-      container.appendChild(section);
-    }
-  }
-
   function getOrCreateSection(container) {
     let section = document.getElementById(SECTION_ID);
     if (!section) {
       section = document.createElement('div');
       section.id = SECTION_ID;
       section.innerHTML = `
-        <h2 class="sectionTitle sectionTitle-cards focuscontainer-x padded-left padded-right">
-          Découvrir sur FanKaï
+        <h2 class="sectionTitle sectionTitle-cards focuscontainer-x padded-left padded-right fankarr-section-title">
+          Découvrir sur
+          <img
+            class="fankarr-logo"
+            src="https://fankai.fr/img/Logo_Fankai_Complet_1-ligne.svg"
+            alt="FanKaï"
+          />
         </h2>
         <div class="fankarr-grid"></div>
       `;
 
-      // Essayer d'insérer maintenant
       const allSections = container.querySelectorAll('.verticalSection');
       let found = false;
       for (const s of allSections) {
@@ -495,17 +521,16 @@
       }
 
       if (!found) {
-        // Pas encore d'Épisodes — attendre et réessayer
         container.appendChild(section);
-        const observer = new MutationObserver(() => {
+        const obs = new MutationObserver(() => {
           const epSection = Array.from(container.querySelectorAll('.verticalSection'))
               .find(s => s.querySelector('.sectionTitle')?.textContent?.toLowerCase().includes('épisode'));
           if (epSection && section.parentNode === container) {
             container.insertBefore(section, epSection);
-            observer.disconnect();
+            obs.disconnect();
           }
         });
-        observer.observe(container, { childList: true, subtree: false });
+        obs.observe(container, { childList: true, subtree: false });
       }
     }
     return section;
@@ -518,6 +543,8 @@
     results.forEach(item => {
       const isRequested = requestedIds.has(item.id);
       const poster = item.image || (item.posterPath ? `https://image.tmdb.org/t/p/w200${item.posterPath}` : null);
+      const year = item.year || '';
+      const rating = item.rating ? Number(item.rating).toFixed(1) : null;
 
       const card = document.createElement('div');
       card.className = 'fankarr-card card overflowPortraitCard card-withuserdata';
@@ -526,21 +553,27 @@
       card.innerHTML = `
         <div class="cardBox cardBox-bottompadded">
           <div class="cardScalable">
-            <div class="cardPadder cardPadder-portrait"></div>
+            <div class="cardPadder cardPadder-overflowPortrait"></div>
             ${poster
           ? `<div class="cardImageContainer coveredImage cardContent" style="background-image:url('${escapeHtml(poster)}');"></div>`
           : `<div class="cardImageContainer defaultCardBackground defaultCardBackground1 cardContent">
                    <span class="cardImageIcon material-icons tv" aria-hidden="true"></span>
                  </div>`
       }
+            <span class="fankarr-badge">SÉRIE</span>
             <div class="fankarr-overlay">
+              <div class="fankarr-overlay-title">${escapeHtml(item.title)}</div>
               <button class="fankarr-btn emby-button raised${isRequested ? ' button-submit' : ''}" ${isRequested ? 'disabled' : ''}>
                 ${isRequested ? '✓ Demandé' : '+ Demander'}
               </button>
             </div>
           </div>
           <div class="cardText cardTextCentered cardText-first"><bdi>${escapeHtml(item.title)}</bdi></div>
-          <div class="cardText cardTextCentered cardText-secondary">${item.year || ''}</div>
+          <div class="fankarr-meta-row">
+            ${year ? `<span>${year}</span>` : ''}
+            ${year && rating ? `<span>·</span>` : ''}
+            ${rating ? `<span class="fankarr-rating"><span class="fankarr-rating-star">★</span>${rating}</span>` : ''}
+          </div>
         </div>
       `;
 
@@ -609,9 +642,7 @@
   // 8. Observer
   // ---------------------------------------------------------------------------
 
-  function findSearchInput() {
-    return document.querySelector('#searchTextInput');
-  }
+  function findSearchInput() { return document.querySelector('#searchTextInput'); }
 
   function findSearchContainer() {
     return (
