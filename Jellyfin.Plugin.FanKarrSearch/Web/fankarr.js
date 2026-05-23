@@ -235,6 +235,27 @@
     #${MODAL_ID} .fankarr-modal-close:hover { color: #fff !important; }
     #${MODAL_ID} .fankarr-modal-subtitle { font-size: 0.85em; color: rgba(255,255,255,0.6) !important; margin-top: 0.2em; }
     #${MODAL_ID} .fankarr-modal-desc { font-size: 0.82em; color: rgba(255,255,255,0.7) !important; line-height: 1.5; margin-bottom: 1em; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+
+    /* ── Already-requested banner ── */
+    #${MODAL_ID} .fankarr-already-banner {
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+      background: rgba(0, 164, 220, 0.15) !important;
+      border: 1px solid rgba(0, 164, 220, 0.4) !important;
+      border-radius: 8px;
+      padding: 0.6em 0.8em;
+      margin-bottom: 1em;
+      font-size: 0.82em;
+      color: rgba(255,255,255,0.85) !important;
+    }
+    #${MODAL_ID} .fankarr-already-banner .fankarr-banner-icon {
+      font-size: 1.1em;
+      color: var(--accent-color, var(--accent, #00a4dc)) !important;
+      flex-shrink: 0;
+    }
+
+    /* ── Season grid ── */
     #${MODAL_ID} .fankarr-select-all {
       width: 100%; padding: 0.6em;
       border: 2px dashed rgba(255,255,255,0.3) !important;
@@ -259,14 +280,29 @@
       color: #fff !important;
       font-size: 0.8em; font-family: var(--font-family, inherit);
       cursor: pointer; text-align: center;
-      transition: border-color 0.15s, background 0.15s;
+      transition: border-color 0.15s, background 0.15s, opacity 0.15s;
     }
-    #${MODAL_ID} .fankarr-season-btn:hover { border-color: var(--accent-color, var(--accent, #00a4dc)) !important; }
+    #${MODAL_ID} .fankarr-season-btn:hover:not(:disabled) { border-color: var(--accent-color, var(--accent, #00a4dc)) !important; }
     #${MODAL_ID} .fankarr-season-btn.selected {
       border-color: var(--accent-color, var(--accent, #00a4dc)) !important;
       background: var(--accent-color, var(--accent, #00a4dc)) !important;
       color: #fff !important;
     }
+    /* Already-requested seasons: shown as "already done", not selectable */
+    #${MODAL_ID} .fankarr-season-btn.already {
+      border-color: rgba(0, 164, 220, 0.5) !important;
+      background: rgba(0, 164, 220, 0.12) !important;
+      color: rgba(255,255,255,0.45) !important;
+      cursor: default;
+      position: relative;
+    }
+    #${MODAL_ID} .fankarr-season-btn.already::after {
+      content: '✓';
+      display: block;
+      font-size: 0.85em;
+      color: var(--accent-color, var(--accent, #00a4dc)) !important;
+    }
+
     #${MODAL_ID} .fankarr-modal-actions { display: flex; gap: 0.75em; margin-top: 1em; }
     #${MODAL_ID} .fankarr-modal-cancel {
       flex: 1;
@@ -279,6 +315,10 @@
       background: var(--accent-color, var(--accent, #00a4dc)) !important;
       color: #fff !important;
       border: none !important;
+    }
+    #${MODAL_ID} .fankarr-modal-submit:disabled {
+      opacity: 0.4;
+      cursor: default;
     }
     #${MODAL_ID} .fankarr-modal-loading { text-align: center; padding: 2em 0; color: rgba(255,255,255,0.6) !important; font-size: 0.9em; }
     #${MODAL_ID} .fankarr-modal-success { text-align: center; padding: 2em 1em; }
@@ -323,12 +363,17 @@
     if (backdrop) { backdrop.classList.remove('open'); document.body.style.overflow = ''; }
   }
 
-  async function showRequestModal(item) {
+  async function showRequestModal(item, alreadyRequestedSeasons = []) {
     createModal();
     const modal = document.getElementById(MODAL_ID);
     const posterHtml = item.image
         ? `<img class="fankarr-modal-poster" src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title)}" />`
         : '';
+
+    // alreadyRequestedSeasons: array of season numbers already submitted.
+    // Empty array = whole series already requested.
+    const wholeSeriesAlreadyRequested = Array.isArray(alreadyRequestedSeasons) && alreadyRequestedSeasons.length === 0 && item._wasRequested;
+    const alreadySet = new Set(alreadyRequestedSeasons);
 
     modal.innerHTML = `
       <div class="fankarr-modal-header">
@@ -351,10 +396,45 @@
       console.error('[FanKarr] Erreur chargement saisons :', e);
     }
 
+    // Seasons selectable = only those NOT already requested
+    const selectableSeasons = seasons.filter(s => !alreadySet.has(s.season_number));
+
+    // New selections (from the selectable ones only)
     const selectedSeasons = new Set();
 
     function renderModal() {
-      const allSelected = seasons.length > 0 && selectedSeasons.size === seasons.length;
+      const allSelectableSelected = selectableSeasons.length > 0 && selectableSeasons.every(s => selectedSeasons.has(s.season_number));
+      const hasNewSelection = selectedSeasons.size > 0;
+
+      const isAddMode = item._wasRequested; // already had a request
+
+      const bannerHtml = isAddMode ? `
+        <div class="fankarr-already-banner">
+          <span class="material-icons fankarr-banner-icon">info</span>
+          <span>${
+          wholeSeriesAlreadyRequested
+              ? 'Toute la série a déjà été demandée.'
+              : `Saison${alreadyRequestedSeasons.length > 1 ? 's' : ''} ${alreadyRequestedSeasons.join(', ')} déjà demandée${alreadyRequestedSeasons.length > 1 ? 's' : ''}. Sélectionne les saisons à ajouter.`
+      }</span>
+        </div>
+      ` : '';
+
+      // "Select all remaining" button — only show if there are selectable seasons
+      const selectAllHtml = selectableSeasons.length > 0 ? `
+        <button class="fankarr-select-all${allSelectableSelected ? ' selected' : ''}">
+          ${allSelectableSelected ? '✓ Toutes les saisons restantes sélectionnées' : 'Sélectionner toutes les saisons restantes'}
+        </button>
+      ` : '';
+
+      // Count hint
+      let countHint = '';
+      if (wholeSeriesAlreadyRequested) {
+        countHint = '';
+      } else if (selectedSeasons.size === 0 && selectableSeasons.length > 0) {
+        countHint = isAddMode ? 'Sélectionne au moins une saison à ajouter' : 'Toute la série sera demandée';
+      } else if (selectedSeasons.size > 0) {
+        countHint = `${selectedSeasons.size} saison${selectedSeasons.size > 1 ? 's' : ''} sélectionnée${selectedSeasons.size > 1 ? 's' : ''}`;
+      }
 
       modal.innerHTML = `
         <div class="fankarr-modal-header">
@@ -366,94 +446,122 @@
           <button class="fankarr-modal-close" aria-label="Fermer">×</button>
         </div>
         ${serieDesc ? `<div class="fankarr-modal-desc">${escapeHtml(serieDesc)}</div>` : ''}
-        <button class="fankarr-select-all${allSelected ? ' selected' : ''}">
-          ${allSelected ? '✓ Toute la série sélectionnée' : 'Sélectionner toute la série'}
-        </button>
+        ${bannerHtml}
+        ${selectAllHtml}
         <div class="fankarr-seasons-grid">
-          ${seasons.map(s => `
-            <button class="fankarr-season-btn${selectedSeasons.has(s.season_number) ? ' selected' : ''}" data-season="${s.season_number}">
-              Saison ${s.season_number}
-            </button>
-          `).join('')}
+          ${seasons.map(s => {
+        const isAlready = alreadySet.has(s.season_number);
+        const isSelected = selectedSeasons.has(s.season_number);
+        let cls = 'fankarr-season-btn';
+        if (isAlready) cls += ' already';
+        else if (isSelected) cls += ' selected';
+        return `
+              <button class="${cls}" data-season="${s.season_number}" ${isAlready ? 'disabled' : ''}>
+                Saison ${s.season_number}
+              </button>
+            `;
+      }).join('')}
         </div>
-        <div style="font-size:0.8em;color:rgba(255,255,255,0.5);text-align:center;margin-bottom:0.5em;">
-          ${selectedSeasons.size === 0 ? 'Toute la série sera demandée' : `${selectedSeasons.size} saison${selectedSeasons.size > 1 ? 's' : ''} sélectionnée${selectedSeasons.size > 1 ? 's' : ''}`}
-        </div>
+        ${countHint ? `<div style="font-size:0.8em;color:rgba(255,255,255,0.5);text-align:center;margin-bottom:0.5em;">${countHint}</div>` : ''}
         <div class="fankarr-modal-actions">
           <button class="fankarr-modal-cancel emby-button raised">Annuler</button>
-          <button class="fankarr-modal-submit emby-button raised button-submit">
-            <span class="material-icons" style="font-size:1em">download</span>
-            Demander
+          <button class="fankarr-modal-submit emby-button raised button-submit" ${(isAddMode && !hasNewSelection) || wholeSeriesAlreadyRequested ? 'disabled' : ''}>
+            <span class="material-icons" style="font-size:1em">${isAddMode ? 'add' : 'download'}</span>
+            ${isAddMode ? 'Demander plus' : 'Demander'}
           </button>
         </div>
       `;
 
       modal.querySelector('.fankarr-modal-close').addEventListener('click', closeModal);
       modal.querySelector('.fankarr-modal-cancel').addEventListener('click', closeModal);
-      modal.querySelector('.fankarr-select-all').addEventListener('click', () => {
-        if (allSelected) { selectedSeasons.clear(); } else { seasons.forEach(s => selectedSeasons.add(s.season_number)); }
-        renderModal();
-      });
-      modal.querySelectorAll('.fankarr-season-btn').forEach(btn => {
+
+      const selectAllBtn = modal.querySelector('.fankarr-select-all');
+      if (selectAllBtn) {
+        selectAllBtn.addEventListener('click', () => {
+          if (allSelectableSelected) {
+            selectedSeasons.clear();
+          } else {
+            selectableSeasons.forEach(s => selectedSeasons.add(s.season_number));
+          }
+          renderModal();
+        });
+      }
+
+      modal.querySelectorAll('.fankarr-season-btn:not([disabled])').forEach(btn => {
         btn.addEventListener('click', () => {
           const n = parseInt(btn.dataset.season);
           if (selectedSeasons.has(n)) { selectedSeasons.delete(n); } else { selectedSeasons.add(n); }
           renderModal();
         });
       });
-      modal.querySelector('.fankarr-modal-submit').addEventListener('click', async () => {
-        const submitBtn = modal.querySelector('.fankarr-modal-submit');
-        submitBtn.disabled = true;
-        submitBtn.textContent = '…';
-        try {
-          await apiPost('/api/v1/requests', {
-            serieId: item.id,
-            serieName: item.title,
-            seasons: selectedSeasons.size > 0 ? [...selectedSeasons].sort((a, b) => a - b) : [],
-          });
-          const seasonsLabel = selectedSeasons.size === 0
-              ? 'Toute la série demandée !'
-              : `Saison${selectedSeasons.size > 1 ? 's' : ''} ${[...selectedSeasons].sort((a, b) => a - b).join(', ')} demandée${selectedSeasons.size > 1 ? 's' : ''} !`;
-          modal.innerHTML = `
-            <div class="fankarr-modal-success">
-              <div class="fankarr-modal-success-icon">✓</div>
-              <div class="fankarr-modal-success-title">${escapeHtml(item.title)}</div>
-              <div class="fankarr-modal-success-sub">${seasonsLabel}</div>
-              <button class="emby-button raised button-submit" style="width:100%;">Fermer</button>
-            </div>
-          `;
-          modal.querySelector('button').addEventListener('click', closeModal);
-          const card = document.querySelector(`[data-fankarr-id="${item.id}"]`);
-          if (card) {
-            const btn = card.querySelector('.fankarr-btn');
-            if (btn) { btn.innerHTML = '<span class="material-icons" style="font-size:1em">check</span> Demandé'; btn.classList.add('button-submit'); btn.disabled = true; }
+
+      const submitBtn = modal.querySelector('.fankarr-modal-submit');
+      if (submitBtn && !submitBtn.disabled) {
+        submitBtn.addEventListener('click', async () => {
+          submitBtn.disabled = true;
+          submitBtn.textContent = '…';
+          try {
+            // If in add-mode, only send the newly selected seasons.
+            // If fresh request with no selection, send [] to mean "whole series".
+            const seasonsToSend = selectedSeasons.size > 0
+                ? [...selectedSeasons].sort((a, b) => a - b)
+                : [];
+
+            await apiPost('/api/v1/requests', {
+              serieId: item.id,
+              serieName: item.title,
+              seasons: seasonsToSend,
+            });
+
+            const newlyRequested = [...selectedSeasons].sort((a, b) => a - b);
+            const seasonsLabel = newlyRequested.length === 0
+                ? 'Toute la série demandée !'
+                : `Saison${newlyRequested.length > 1 ? 's' : ''} ${newlyRequested.join(', ')} demandée${newlyRequested.length > 1 ? 's' : ''} !`;
+
+            modal.innerHTML = `
+              <div class="fankarr-modal-success">
+                <div class="fankarr-modal-success-icon">✓</div>
+                <div class="fankarr-modal-success-title">${escapeHtml(item.title)}</div>
+                <div class="fankarr-modal-success-sub">${seasonsLabel}</div>
+                <button class="emby-button raised button-submit" style="width:100%;">Fermer</button>
+              </div>
+            `;
+            modal.querySelector('button').addEventListener('click', closeModal);
+
+            // Update card button label
+            updateCardButton(item.id, [...alreadySet, ...newlyRequested], seasons.length);
+          } catch (e) {
+            console.error('[FanKarr] Erreur demande :', e);
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Réessayer';
           }
-        } catch (e) {
-          console.error('[FanKarr] Erreur demande :', e);
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'Réessayer';
-        }
-      });
+        });
+      }
     }
 
     renderModal();
   }
 
+  // Update the card button after a successful request
+  function updateCardButton(serieId, allRequestedSeasons, totalSeasons) {
+    const card = document.querySelector(`[data-fankarr-id="${serieId}"]`);
+    if (!card) return;
+    const btn = card.querySelector('.fankarr-btn');
+    if (!btn) return;
+
+    const allDone = allRequestedSeasons.length === 0 || allRequestedSeasons.length >= totalSeasons;
+    if (allDone) {
+      btn.innerHTML = '<span class="material-icons" style="font-size:1em">check</span> Demandé';
+      btn.classList.add('button-submit');
+    } else {
+      btn.innerHTML = '<span class="material-icons" style="font-size:1em">add</span> Demander plus';
+      btn.classList.remove('button-submit');
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // 6. UI — section et cards
   // ---------------------------------------------------------------------------
-
-  function insertBeforeEpisodes(section, container) {
-    const allSections = container.querySelectorAll('.verticalSection');
-    for (const s of allSections) {
-      const title = s.querySelector('.sectionTitle')?.textContent?.toLowerCase() || '';
-      if (title.includes('épisode')) {
-        container.insertBefore(section, s);
-        return true;
-      }
-    }
-    return false;
-  }
 
   function getOrCreateSection(container) {
     let section = document.getElementById(SECTION_ID);
@@ -467,10 +575,9 @@
       </h2>
       <div class="fankarr-grid padded-left"></div>
     `;
-
       container.appendChild(section);
 
-      // Attendre 1s puis repositionner avant Épisodes si disponible
+      // Reposition before Episodes section if it appears later
       setTimeout(() => {
         const epSection = Array.from(container.querySelectorAll('.verticalSection'))
             .find(s => s.querySelector('.sectionTitle')?.textContent?.toLowerCase().includes('épisode'));
@@ -482,17 +589,38 @@
     return section;
   }
 
-  function renderResults(section, results, requestedIds) {
+  function renderResults(section, results, requestedMap) {
     const grid = section.querySelector('.fankarr-grid');
-    if (!grid) return; // sécurité
+    if (!grid) return;
     grid.innerHTML = '';
 
     results.forEach(item => {
-      const isRequested = requestedIds.has(item.id);
+      // requestedMap: Map<serieId, number[]>
+      // undefined  → never requested
+      // []         → whole series requested
+      // [1,2]      → specific seasons requested
+      const requestedSeasons = requestedMap.get(item.id); // undefined | number[]
+      const wasRequested = requestedSeasons !== undefined;
+      const wholeSeriesRequested = wasRequested && requestedSeasons.length === 0;
+
+      // Enrich item with request state for modal
+      item._wasRequested = wasRequested;
+      item._requestedSeasons = requestedSeasons || [];
+
       const poster = item.image || (item.posterPath ? `https://image.tmdb.org/t/p/w200${item.posterPath}` : null);
       const year = item.year || '';
       const rating = item.rating ? Number(item.rating).toFixed(1) : null;
       const desc = item.description || '';
+
+      // Button label
+      let btnIcon, btnLabel, btnClass;
+      if (wholeSeriesRequested) {
+        btnIcon = 'check'; btnLabel = 'Demandé'; btnClass = ' button-submit';
+      } else if (wasRequested) {
+        btnIcon = 'add'; btnLabel = 'Demander plus'; btnClass = '';
+      } else {
+        btnIcon = 'download'; btnLabel = 'Demander'; btnClass = '';
+      }
 
       const card = document.createElement('div');
       card.className = 'fankarr-card card overflowPortraitCard card-withuserdata';
@@ -509,9 +637,9 @@
             <span class="fankarr-badge">SÉRIE</span>
             <div class="fankarr-overlay">
               ${desc ? `<div class="fankarr-overlay-desc">${escapeHtml(desc)}</div>` : ''}
-              <button class="fankarr-btn emby-button raised${isRequested ? ' button-submit' : ''}" ${isRequested ? 'disabled' : ''}>
-                <span class="material-icons" style="font-size:1em">${isRequested ? 'check' : 'download'}</span>
-                ${isRequested ? 'Demandé' : 'Demander'}
+              <button class="fankarr-btn emby-button raised${btnClass}">
+                <span class="material-icons" style="font-size:1em">${btnIcon}</span>
+                ${btnLabel}
               </button>
             </div>
           </div>
@@ -524,10 +652,11 @@
         </div>
       `;
 
-      if (!isRequested) {
+      // Always clickable unless whole series already requested
+      if (!wholeSeriesRequested) {
         card.querySelector('.fankarr-btn').addEventListener('click', (e) => {
           e.stopPropagation();
-          showRequestModal(item);
+          showRequestModal(item, item._requestedSeasons);
         });
       }
 
@@ -542,12 +671,19 @@
   let searchTimeout = null;
   let lastQuery = '';
 
-  async function fetchRequestedIds() {
+  // Returns a Map<serieId, number[]>
+  // number[] = [] means whole series, [1,2,...] means specific seasons
+  async function fetchRequestedMap() {
     try {
       const data = await apiGet('/api/v1/requests');
       const items = data.results || data || [];
-      return new Set(items.map(r => r.serieId || r.media?.id || r.mediaId));
-    } catch { return new Set(); }
+      const map = new Map();
+      items.forEach(r => {
+        const id = r.serieId || r.media?.id || r.mediaId;
+        if (id != null) map.set(id, r.seasons || []);
+      });
+      return map;
+    } catch { return new Map(); }
   }
 
   async function onSearch(query, container) {
@@ -558,10 +694,14 @@
     }
     if (query === lastQuery) return;
     lastQuery = query;
+
+    // Always prefer .searchResults; fall back to the passed container
+    const realContainer = document.querySelector('.searchResults') || container;
+
     try {
-      const [searchData, requestedIds] = await Promise.all([
+      const [searchData, requestedMap] = await Promise.all([
         apiGet(`/api/v1/series/search?q=${encodeURIComponent(query)}`),
-        fetchRequestedIds(),
+        fetchRequestedMap(),
       ]);
       const results = searchData.results || searchData || [];
       if (!results || results.length === 0) {
@@ -570,8 +710,8 @@
         return;
       }
 
-      const section = getOrCreateSection(container);
-      renderResults(section, results, requestedIds);
+      const section = getOrCreateSection(realContainer);
+      renderResults(section, results, requestedMap);
     } catch (e) {
       console.error('[FanKarr] Erreur recherche :', e);
       const existing = document.getElementById(SECTION_ID);
@@ -586,12 +726,12 @@
   function findSearchInput() { return document.querySelector('#searchTextInput'); }
 
   function findSearchContainer() {
-    return (
-        document.querySelector('.searchResults') ||
-        document.querySelector('.padded-left.padded-right') ||
-        document.querySelector('.itemsContainer')?.closest('.pageTabContent, .tabContent, [data-role="page"]') ||
-        document.querySelector('#searchTextInput')?.closest('[data-role="page"]')
-    );
+    // Prefer .searchResults (appears after first keystroke in Jellyfin)
+    const sr = document.querySelector('.searchResults');
+    if (sr) return sr;
+    // Fallback: closest page wrapper
+    return document.querySelector('#searchTextInput')
+        ?.closest('[data-role="page"]') ?? null;
   }
 
   function isSearchPage() {
