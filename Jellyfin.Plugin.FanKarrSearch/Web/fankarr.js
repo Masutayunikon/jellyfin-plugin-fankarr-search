@@ -251,9 +251,9 @@
       const isRequested = requestedIds.has(item.id);
       const type = item.type === 'series' ? 'SÉRIE' : 'FILM';
       const year = item.year ? item.year : '';
-      const poster = item.posterPath
-        ? `https://image.tmdb.org/t/p/w200${item.posterPath}`
-        : 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="130" height="195" viewBox="0 0 130 195"><rect fill="%23333" width="130" height="195"/><text fill="%23666" font-size="12" x="50%25" y="50%25" text-anchor="middle" dy=".3em">No Image</text></svg>';
+      const poster = item.image || item.posterPath
+          ? (item.image || `https://image.tmdb.org/t/p/w200${item.posterPath}`)
+          : 'data:image/svg+xml,...';
 
       card.innerHTML = `
         <span class="fankarr-badge">${type}</span>
