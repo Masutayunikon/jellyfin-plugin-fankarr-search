@@ -122,11 +122,7 @@
       margin-bottom: 0.75em;
       font-size: 1.1em;
       font-weight: 600;
-      color: var(--text-color-emphasis, #fff);
-    }
-    #${SECTION_ID} .fankarr-header img {
-      width: 22px;
-      height: 22px;
+      color: var(--text-color);
     }
     #${SECTION_ID} .fankarr-grid {
       display: flex;
@@ -135,21 +131,20 @@
     }
     #${SECTION_ID} .fankarr-card {
       width: 130px;
-      cursor: default;
       position: relative;
     }
     #${SECTION_ID} .fankarr-card img {
       width: 100%;
-      border-radius: 6px;
+      border-radius: var(--card-border-radius, 6px);
       aspect-ratio: 2/3;
       object-fit: cover;
-      background: #222;
+      background: var(--card-background, #222);
     }
     #${SECTION_ID} .fankarr-card .fankarr-title {
       font-size: 0.78em;
       margin-top: 4px;
       text-align: center;
-      color: var(--text-color, #ddd);
+      color: var(--text-color);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -157,14 +152,14 @@
     #${SECTION_ID} .fankarr-card .fankarr-meta {
       font-size: 0.7em;
       text-align: center;
-      color: var(--text-color-secondary, #999);
+      color: var(--text-color-secondary);
     }
     #${SECTION_ID} .fankarr-card .fankarr-badge {
       position: absolute;
       top: 5px;
       left: 5px;
-      background: var(--accent-color, #00a4dc);
-      color: #fff;
+      background: var(--accent-color);
+      color: var(--accent-color-foreground, #fff);
       font-size: 0.65em;
       font-weight: 700;
       padding: 2px 6px;
@@ -177,9 +172,9 @@
       margin-top: 6px;
       padding: 4px 0;
       border: none;
-      border-radius: 4px;
-      background: var(--accent-color, #00a4dc);
-      color: #fff;
+      border-radius: var(--button-border-radius, 4px);
+      background: var(--accent-color);
+      color: var(--accent-color-foreground, #fff);
       font-size: 0.72em;
       font-weight: 600;
       cursor: pointer;
@@ -187,19 +182,15 @@
     }
     #${SECTION_ID} .fankarr-btn:hover { opacity: 0.85; }
     #${SECTION_ID} .fankarr-btn:disabled {
-      background: #555;
+      background: var(--button-background, #555);
+      opacity: 0.6;
       cursor: default;
-      opacity: 1;
     }
     #${SECTION_ID} .fankarr-btn.requested {
-      background: #2e7d32;
+      background: var(--success-color, #2e7d32);
     }
     #${SECTION_ID} .fankarr-empty {
-      color: var(--text-color-secondary, #888);
-      font-size: 0.9em;
-    }
-    #${SECTION_ID} .fankarr-spinner {
-      color: var(--text-color-secondary, #888);
+      color: var(--text-color-secondary);
       font-size: 0.9em;
     }
   `;
@@ -218,19 +209,13 @@
       section = document.createElement('div');
       section.id = SECTION_ID;
       section.innerHTML = `
-        <div class="fankarr-header">
-          <span>🎬</span>
-          <span>Découvrir sur FanKarr</span>
-        </div>
-        <div class="fankarr-grid"></div>
-      `;
-      // Insérer avant les résultats Jellyfin existants ou à la fin du container
-      const firstChild = container.firstChild;
-      if (firstChild) {
-        container.insertBefore(section, firstChild);
-      } else {
-        container.appendChild(section);
-      }
+      <div class="fankarr-header">
+        <span>🎬</span>
+        <span>Découvrir sur FanKarr</span>
+      </div>
+      <div class="fankarr-grid"></div>
+    `;
+      container.appendChild(section); // à la fin
     }
     return section;
   }
@@ -323,10 +308,6 @@
     if (query === lastQuery) return;
     lastQuery = query;
 
-    const section = getOrCreateSection(container);
-    const grid = section.querySelector('.fankarr-grid');
-    grid.innerHTML = '<span class="fankarr-spinner">Recherche sur FanKarr…</span>';
-
     try {
       const [searchData, requestedIds] = await Promise.all([
         apiGet(`/api/v1/series/search?q=${encodeURIComponent(query)}`),
@@ -334,10 +315,21 @@
       ]);
 
       const results = searchData.results || searchData || [];
+
+      // Ne pas afficher la section si aucun résultat
+      if (!results || results.length === 0) {
+        const existing = document.getElementById(SECTION_ID);
+        if (existing) existing.remove();
+        return;
+      }
+
+      const section = getOrCreateSection(container);
       renderResults(section, results, requestedIds);
     } catch (e) {
       console.error('[FanKarr] Erreur de recherche :', e);
-      grid.innerHTML = '<span class="fankarr-empty">Erreur lors de la recherche.</span>';
+      // Masquer la section en cas d'erreur
+      const existing = document.getElementById(SECTION_ID);
+      if (existing) existing.remove();
     }
   }
 
