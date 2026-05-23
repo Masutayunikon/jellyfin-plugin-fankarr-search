@@ -468,16 +468,16 @@
       <div class="fankarr-grid padded-left"></div>
     `;
 
-      if (!insertBeforeEpisodes(section, container)) {
-        container.appendChild(section);
-        let attempts = 0;
-        const interval = setInterval(() => {
-          attempts++;
-          if (insertBeforeEpisodes(section, container) || attempts > 15) {
-            clearInterval(interval);
-          }
-        }, 200);
-      }
+      container.appendChild(section);
+
+      // Attendre 1s puis repositionner avant Épisodes si disponible
+      setTimeout(() => {
+        const epSection = Array.from(container.querySelectorAll('.verticalSection'))
+            .find(s => s.querySelector('.sectionTitle')?.textContent?.toLowerCase().includes('épisode'));
+        if (epSection && section.parentNode === container) {
+          container.insertBefore(section, epSection);
+        }
+      }, 1000);
     }
     return section;
   }
