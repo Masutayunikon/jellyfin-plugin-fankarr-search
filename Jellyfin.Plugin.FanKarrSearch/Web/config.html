@@ -14,50 +14,33 @@
       </div>
 
       <br/>
-      <button id="fankarrSave" class="raised button-submit emby-button" type="button">Enregistrer</button>
+      <button id="fankarrSave" class="raised button-submit emby-button" type="button" onclick="fankarrSave()">Enregistrer</button>
       <div id="fankarrStatus" style="margin-top:1em;color:green;display:none;">✓ Sauvegardé !</div>
     </div>
   </div>
 </div>
 
-<script type="text/javascript">
-  (function() {
-    var pluginId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+<script>
+  var pluginId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
 
-    function init() {
-      var input = document.querySelector('#fankarrApiUrl');
-      var btn = document.querySelector('#fankarrSave');
-      var status = document.querySelector('#fankarrStatus');
+  // Charger la config au chargement de la page
+  var api = window.ApiClient || parent.ApiClient;
+  api.getPluginConfiguration(pluginId).then(function(config) {
+    document.getElementById('fankarrApiUrl').value = config.ApiUrl || '';
+  });
 
-      if (!input || !btn) {
-        setTimeout(init, 100);
-        return;
-      }
-
-      // Charger la config
-      ApiClient.getPluginConfiguration(pluginId).then(function(config) {
-        input.value = config.ApiUrl || '';
+  function fankarrSave() {
+    var api = window.ApiClient || parent.ApiClient;
+    var url = document.getElementById('fankarrApiUrl').value.trim().replace(/\/$/, '');
+    api.getPluginConfiguration(pluginId).then(function(config) {
+      config.ApiUrl = url;
+      api.updatePluginConfiguration(pluginId, config).then(function() {
+        var status = document.getElementById('fankarrStatus');
+        status.style.display = 'block';
+        setTimeout(function() { status.style.display = 'none'; }, 3000);
       });
-
-      // Sauvegarder
-      btn.onclick = function() {
-        var url = input.value.trim().replace(/\/$/, '');
-        ApiClient.getPluginConfiguration(pluginId).then(function(config) {
-          config.ApiUrl = url;
-          ApiClient.updatePluginConfiguration(pluginId, config).then(function() {
-            status.style.display = 'block';
-            setTimeout(function() { status.style.display = 'none'; }, 3000);
-          });
-        });
-      };
-    }
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', init);
-    } else {
-      init();
-    }
-  })();
+    });
+  }
 </script>
 </body>
 </html>
