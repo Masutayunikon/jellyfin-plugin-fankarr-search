@@ -99,14 +99,12 @@
       width: auto;
       display: inline-block;
       vertical-align: middle;
-      opacity: 0.9;
+      filter: brightness(0) saturate(100%) invert(80%) sepia(60%) saturate(400%) hue-rotate(5deg) brightness(105%);
     }
     #${SECTION_ID} .fankarr-grid {
       display: flex;
       flex-wrap: wrap;
       gap: 0.5em;
-      padding-left: var(--padded-left, 1.7em);
-      padding-right: var(--padded-right, 1.7em);
     }
     #${SECTION_ID} .fankarr-card {
       position: relative;
@@ -187,9 +185,7 @@
       align-items: center;
       gap: 0.2em;
     }
-    #${SECTION_ID} .fankarr-rating-star {
-      color: #f5c518;
-    }
+    #${SECTION_ID} .fankarr-rating-star { color: #f5c518; }
 
     /* ── Backdrop ── */
     #${MODAL_ID}-backdrop {
@@ -232,90 +228,22 @@
       }
       #${MODAL_ID}-backdrop.open #${MODAL_ID} { transform: scale(1); opacity: 1; }
     }
-    #${MODAL_ID} .fankarr-modal-header {
-      display: flex;
-      align-items: center;
-      gap: 1em;
-      margin-bottom: 1.25em;
-    }
-    #${MODAL_ID} .fankarr-modal-poster {
-      width: 60px;
-      aspect-ratio: 2/3;
-      object-fit: cover;
-      border-radius: 6px;
-      flex-shrink: 0;
-    }
-    #${MODAL_ID} .fankarr-modal-title {
-      font-size: 1.1em;
-      font-weight: 600;
-      color: var(--text-color, #fff);
-    }
-    #${MODAL_ID} .fankarr-modal-close {
-      margin-left: auto;
-      background: none;
-      border: none;
-      color: var(--text-color-secondary, #aaa);
-      font-size: 1.5em;
-      cursor: pointer;
-      padding: 0;
-      line-height: 1;
-      flex-shrink: 0;
-    }
+    #${MODAL_ID} .fankarr-modal-header { display: flex; align-items: center; gap: 1em; margin-bottom: 1.25em; }
+    #${MODAL_ID} .fankarr-modal-poster { width: 60px; aspect-ratio: 2/3; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+    #${MODAL_ID} .fankarr-modal-title { font-size: 1.1em; font-weight: 600; color: var(--text-color, #fff); }
+    #${MODAL_ID} .fankarr-modal-close { margin-left: auto; background: none; border: none; color: var(--text-color-secondary, #aaa); font-size: 1.5em; cursor: pointer; padding: 0; line-height: 1; flex-shrink: 0; }
     #${MODAL_ID} .fankarr-modal-close:hover { color: var(--text-color, #fff); }
-    #${MODAL_ID} .fankarr-modal-subtitle {
-      font-size: 0.85em;
-      color: var(--text-color-secondary, #aaa);
-      margin-top: 0.2em;
-    }
-    #${MODAL_ID} .fankarr-select-all {
-      width: 100%;
-      padding: 0.6em;
-      border: 2px dashed var(--border-color, var(--text-color-secondary, #555));
-      border-radius: 8px;
-      background: transparent;
-      color: var(--text-color-secondary, #aaa);
-      font-size: 0.85em;
-      font-family: var(--font-family, inherit);
-      cursor: pointer;
-      margin-bottom: 0.75em;
-      transition: border-color 0.15s, color 0.15s;
-    }
-    #${MODAL_ID} .fankarr-select-all:hover,
-    #${MODAL_ID} .fankarr-select-all.selected {
-      border-color: var(--accent-color, var(--accent, #00a4dc));
-      color: var(--accent-color, var(--accent, #00a4dc));
-    }
-    #${MODAL_ID} .fankarr-seasons-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-      gap: 0.5em;
-      margin-bottom: 1.25em;
-    }
-    #${MODAL_ID} .fankarr-season-btn {
-      padding: 0.6em 0.25em;
-      border: 2px solid var(--border-color, var(--text-color-secondary, #555));
-      border-radius: 8px;
-      background: transparent;
-      color: var(--text-color, #fff);
-      font-size: 0.8em;
-      font-family: var(--font-family, inherit);
-      cursor: pointer;
-      text-align: center;
-      transition: border-color 0.15s, background 0.15s, color 0.15s;
-    }
+    #${MODAL_ID} .fankarr-modal-subtitle { font-size: 0.85em; color: var(--text-color-secondary, #aaa); margin-top: 0.2em; }
+    #${MODAL_ID} .fankarr-select-all { width: 100%; padding: 0.6em; border: 2px dashed var(--border-color, var(--text-color-secondary, #555)); border-radius: 8px; background: transparent; color: var(--text-color-secondary, #aaa); font-size: 0.85em; font-family: var(--font-family, inherit); cursor: pointer; margin-bottom: 0.75em; transition: border-color 0.15s, color 0.15s; }
+    #${MODAL_ID} .fankarr-select-all:hover, #${MODAL_ID} .fankarr-select-all.selected { border-color: var(--accent-color, var(--accent, #00a4dc)); color: var(--accent-color, var(--accent, #00a4dc)); }
+    #${MODAL_ID} .fankarr-seasons-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 0.5em; margin-bottom: 1.25em; }
+    #${MODAL_ID} .fankarr-season-btn { padding: 0.6em 0.25em; border: 2px solid var(--border-color, var(--text-color-secondary, #555)); border-radius: 8px; background: transparent; color: var(--text-color, #fff); font-size: 0.8em; font-family: var(--font-family, inherit); cursor: pointer; text-align: center; transition: border-color 0.15s, background 0.15s, color 0.15s; }
     #${MODAL_ID} .fankarr-season-btn:hover { border-color: var(--accent-color, var(--accent, #00a4dc)); }
-    #${MODAL_ID} .fankarr-season-btn.selected {
-      border-color: var(--accent-color, var(--accent, #00a4dc));
-      background: var(--accent-color, var(--accent, #00a4dc));
-      color: #fff;
-    }
+    #${MODAL_ID} .fankarr-season-btn.selected { border-color: var(--accent-color, var(--accent, #00a4dc)); background: var(--accent-color, var(--accent, #00a4dc)); color: #fff; }
     #${MODAL_ID} .fankarr-modal-actions { display: flex; gap: 0.75em; margin-top: 1em; }
     #${MODAL_ID} .fankarr-modal-cancel { flex: 1; }
     #${MODAL_ID} .fankarr-modal-submit { flex: 2; }
-    #${MODAL_ID} .fankarr-modal-loading {
-      text-align: center; padding: 2em 0;
-      color: var(--text-color-secondary, #aaa); font-size: 0.9em;
-    }
+    #${MODAL_ID} .fankarr-modal-loading { text-align: center; padding: 2em 0; color: var(--text-color-secondary, #aaa); font-size: 0.9em; }
     #${MODAL_ID} .fankarr-modal-success { text-align: center; padding: 2em 1em; }
     #${MODAL_ID} .fankarr-modal-success-icon { font-size: 2.5em; margin-bottom: 0.4em; color: var(--accent-color, var(--accent, #00a4dc)); }
     #${MODAL_ID} .fankarr-modal-success-title { font-weight: 600; margin-bottom: 0.4em; color: var(--text-color, #fff); }
@@ -467,6 +395,16 @@
   // 6. UI — section et cards
   // ---------------------------------------------------------------------------
 
+  function syncGridPadding(container, grid) {
+    const ref = container.querySelector('.padded-left:not(#${SECTION_ID} *)');
+    if (ref && grid) {
+      const pl = getComputedStyle(ref).paddingLeft;
+      const pr = getComputedStyle(ref).paddingRight;
+      grid.style.paddingLeft = pl;
+      grid.style.paddingRight = pr;
+    }
+  }
+
   function getOrCreateSection(container) {
     let section = document.getElementById(SECTION_ID);
     if (!section) {
@@ -477,7 +415,7 @@
           Découvrir sur FanKaï
           <img class="fankarr-logo" src="${FANKAI_LOGO}" alt="FanKaï" />
         </h2>
-        <div class="fankarr-grid padded-left padded-right"></div>
+        <div class="fankarr-grid"></div>
       `;
 
       const allSections = container.querySelectorAll('.verticalSection');
@@ -495,6 +433,11 @@
         });
         obs.observe(container, { childList: true, subtree: false });
       }
+
+      // Sync padding avec .padded-left de Jellyfin
+      const grid = section.querySelector('.fankarr-grid');
+      syncGridPadding(container, grid);
+      window.addEventListener('resize', () => syncGridPadding(container, grid));
     }
     return section;
   }
@@ -520,9 +463,7 @@
             <div class="cardPadder cardPadder-overflowPortrait"></div>
             ${poster
           ? `<div class="cardImageContainer coveredImage cardContent" style="background-image:url('${escapeHtml(poster)}');"></div>`
-          : `<div class="cardImageContainer defaultCardBackground defaultCardBackground1 cardContent">
-                   <span class="cardImageIcon material-icons tv" aria-hidden="true"></span>
-                 </div>`
+          : `<div class="cardImageContainer defaultCardBackground defaultCardBackground1 cardContent"><span class="cardImageIcon material-icons tv" aria-hidden="true"></span></div>`
       }
             <span class="fankarr-badge">SÉRIE</span>
             <div class="fankarr-overlay">
