@@ -25,6 +25,7 @@
   <!-- Embed the JS file as a resource so it's packaged in the DLL -->
   <ItemGroup>
     <EmbeddedResource Include="Web\fankarr.js" />
+    <EmbeddedResource Include="Web\config.html" />
   </ItemGroup>
 
 </Project>
