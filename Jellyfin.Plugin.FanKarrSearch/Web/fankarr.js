@@ -104,8 +104,7 @@
     #${SECTION_ID} .fankarr-grid {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.5em;
-      padding: 0;
+      gap: 0 0.5em 0.5em 0;
     }
     #${SECTION_ID} .fankarr-card {
       position: relative;
@@ -354,9 +353,6 @@
 
     function renderModal() {
       const allSelected = seasons.length > 0 && selectedSeasons.size === seasons.length;
-      const submitLabel = selectedSeasons.size === 0
-          ? 'Toute la série'
-          : `${selectedSeasons.size} saison${selectedSeasons.size > 1 ? 's' : ''}`;
 
       modal.innerHTML = `
         <div class="fankarr-modal-header">
@@ -378,9 +374,15 @@
             </button>
           `).join('')}
         </div>
+        <div style="font-size:0.8em;color:rgba(255,255,255,0.5);text-align:center;margin-bottom:0.5em;">
+          ${selectedSeasons.size === 0 ? 'Toute la série sera demandée' : `${selectedSeasons.size} saison${selectedSeasons.size > 1 ? 's' : ''} sélectionnée${selectedSeasons.size > 1 ? 's' : ''}`}
+        </div>
         <div class="fankarr-modal-actions">
           <button class="fankarr-modal-cancel emby-button raised">Annuler</button>
-          <button class="fankarr-modal-submit emby-button raised button-submit">${submitLabel}</button>
+          <button class="fankarr-modal-submit emby-button raised button-submit">
+            <span class="material-icons" style="font-size:1em">download</span>
+            Demander
+          </button>
         </div>
       `;
 
@@ -445,11 +447,13 @@
       section = document.createElement('div');
       section.id = SECTION_ID;
       section.innerHTML = `
-        <h2 class="sectionTitle sectionTitle-cards focuscontainer-x padded-left padded-right fankarr-section-title">
-          Découvrir sur FanKaï
-          <img class="fankarr-logo" src="${FANKAI_LOGO}" alt="FanKaï" />
-        </h2>
-        <div class="fankarr-grid padded-left padded-right"></div>
+        <div class="padded-left padded-right">
+          <h2 class="sectionTitle sectionTitle-cards focuscontainer-x fankarr-section-title">
+            Découvrir sur FanKaï
+            <img class="fankarr-logo" src="${FANKAI_LOGO}" alt="FanKaï" />
+          </h2>
+          <div class="fankarr-grid"></div>
+        </div>
       `;
 
       const allSections = container.querySelectorAll('.verticalSection');
