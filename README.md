@@ -1,72 +1,61 @@
-# jellyfin-plugin-fankarr
+# FanKarr Search — Plugin Jellyfin
 
-Plugin Jellyfin 10.11 qui intègre **FanKarr** dans la recherche native.
+Plugin Jellyfin qui injecte une section **"Découvrir sur FanKaï"** dans la page de recherche. Vos utilisateurs peuvent parcourir le catalogue FanKaï et demander des séries directement depuis Jellyfin.
 
-## Ce que ça fait
+---
 
-- Injecte une section **"Découvrir sur FanKarr"** dans la page de recherche Jellyfin
-- Affiche les résultats de ton API (`GET /api/v1/series/search?q=`)
-- Bouton **"Demander"** pour chaque résultat (`POST /api/v1/requests`)
-- Auth automatique via ton endpoint `POST /api/v1/auth/jellyfin`
-- Mémorise les médias déjà demandés (bouton grisé)
+## Prérequis
 
-## Build
+Ce plugin nécessite **[Jellyfin JavaScript Injector](https://github.com/n00bcodr/Jellyfin-JavaScript-Injector)** pour fonctionner. Il permet d'injecter du JavaScript personnalisé dans l'interface Jellyfin.
 
-```bash
-dotnet build Jellyfin.Plugin.FanKarr.sln -c Release
-```
+Si vous ne l'avez pas encore, installez-le d'abord en suivant les instructions de son dépôt.
 
-Le DLL se trouve dans :
-`Jellyfin.Plugin.FanKarr/bin/Release/net8.0/Jellyfin.Plugin.FanKarr.dll`
+---
 
-## Installation manuelle
+## Installation
 
-1. Créer un dossier `FanKarr` dans ton répertoire plugins Jellyfin :
-   - **Docker/Linux** : `/config/plugins/FanKarr/`
-   - **Windows** : `%LOCALAPPDATA%\jellyfin\plugins\FanKarr\`
-2. Copier `Jellyfin.Plugin.FanKarr.dll` dans ce dossier
-3. Redémarrer Jellyfin
-4. Aller dans **Dashboard → Plugins → FanKarr**
-5. Renseigner l'URL de ton API FanKarr et sauvegarder
-6. Redémarrer Jellyfin (pour l'injection dans index.html)
+### 1. Ajouter le dépôt de plugins
 
-## Docker — permission sur index.html
+Dans Jellyfin, allez dans **Dashboard → Plugins → Dépôts** et ajoutez un nouveau dépôt :
 
-Si Jellyfin tourne en Docker sans root, il faut mapper index.html :
+| Champ | Valeur |
+|-------|--------|
+| Nom | `FanKarr Search` |
+| URL | `https://masutayunikon.github.io/jellyfin-plugin-fankarr-search/manifest.json` |
 
-```yaml
-services:
-  jellyfin:
-    volumes:
-      - /path/to/config:/config
-      - /path/to/config/index.html:/usr/share/jellyfin/web/index.html
-```
+### 2. Installer le plugin
 
-Lance Jellyfin une première fois sans le mapping pour générer le fichier,
-puis ajoute le volume et redémarre.
+Allez dans **Dashboard → Plugins → Catalogue**, recherchez **FanKarr Search** et cliquez sur **Installer**.
 
-## Structure du projet
+Redémarrez Jellyfin après l'installation.
+
+### 3. Configurer l'URL de l'API
+
+Allez dans **Dashboard → Plugins → FanKarr Search** et renseignez l'URL de votre instance FanKarr :
 
 ```
-Jellyfin.Plugin.FanKarr/
-├── Configuration/
-│   └── PluginConfiguration.cs   # Stocke l'URL de l'API
-├── Controllers/
-│   └── FanKarrController.cs     # GET /FanKarr/config + GET /FanKarr/script.js
-├── Web/
-│   ├── fankarr.js               # Toute la logique frontend (embarquée dans le DLL)
-│   └── config.html              # Page de config dans le Dashboard
-├── Plugin.cs                    # Entrée du plugin + injection dans index.html
-└── PluginServiceRegistrator.cs  # Enregistrement DI
+http://localhost:9898
 ```
 
-## Adapter à ton API
+Sans slash final. Adaptez l'adresse et le port selon votre configuration.
 
-Les seuls endroits à modifier si ton API change :
+### 4. Ajouter le script dans JavaScript Injector
 
-| Ce qui change | Fichier | Ligne |
-|---|---|---|
-| Format de réponse auth | `fankarr.js` | fonction `authenticate()` |
-| Format de réponse search | `fankarr.js` | fonction `onSearch()` |
-| Corps de la demande | `fankarr.js` | fonction `handleRequest()` |
-| Champs affichés (titre, poster…) | `fankarr.js` | fonction `renderResults()` |
+Allez dans les paramètres de **JavaScript Injector** et ajoutez le lien vers le script FanKarr fourni par le plugin.
+
+---
+
+## ⚠️ HTTPS et mixed content
+
+Si votre instance Jellyfin est accessible en **HTTPS**, l'URL FanKarr doit **également être en HTTPS**.
+
+Les navigateurs bloquent les requêtes HTTP depuis une page HTTPS (mixed content). Si vous accédez à Jellyfin en `https://` et que l'URL FanKarr est en `http://`, les appels seront bloqués silencieusement et le plugin ne fonctionnera pas.
+
+---
+
+## Fonctionnalités
+
+- **Recherche intégrée** — une section FanKaï apparaît automatiquement dans les résultats de recherche Jellyfin.
+- **Demande de séries** — les utilisateurs peuvent demander une série entière ou des saisons spécifiques en un clic.
+- **Demander plus** — si une série a déjà été partiellement demandée, les utilisateurs peuvent ajouter des saisons supplémentaires sans doublon.
+- **Authentification transparente** — le plugin s'authentifie automatiquement auprès de FanKarr via le token Jellyfin de l'utilisateur.
