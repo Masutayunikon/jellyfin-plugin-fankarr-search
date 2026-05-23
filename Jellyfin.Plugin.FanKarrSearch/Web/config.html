@@ -1,44 +1,58 @@
 <!DOCTYPE html>
-<html>
-<head><title>FanKarr Search</title></head>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>FanKarr Search</title>
+</head>
 <body>
-<div id="fankarrConfigPage" data-role="page" class="page type-interior pluginConfigurationPage">
+<div id="FanKarrSearchConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button">
   <div data-role="content">
     <div class="content-primary">
-      <h2 class="sectionTitle">FanKarr Search — Configuration</h2>
+      <form id="FanKarrSearchConfigForm">
 
-      <div class="verticalSection">
-        <label class="inputLabel" for="fankarrApiUrl">URL de l'API FanKarr</label>
-        <input id="fankarrApiUrl" type="url" class="emby-input" placeholder="https://fankarr.example.com" />
-        <div class="fieldDescription">Sans slash final. Ex : <code>https://fankarr.mondomaine.com</code></div>
-      </div>
+        <div class="inputContainer">
+          <label class="inputLabel inputLabelUnfocused" for="ApiUrl">URL de l'API FanKarr</label>
+          <input id="ApiUrl" name="ApiUrl" type="url" is="emby-input" placeholder="https://fankarr.example.com" />
+          <div class="fieldDescription">Sans slash final. Ex : https://fankarr.mondomaine.com</div>
+        </div>
 
-      <br/>
-      <button id="fankarrSave" class="raised button-submit emby-button" type="button">Enregistrer</button>
-      <div id="fankarrStatus" style="margin-top:1em;color:green;display:none;">✓ Sauvegardé !</div>
+        <div>
+          <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+            <span>Enregistrer</span>
+          </button>
+        </div>
+
+      </form>
     </div>
   </div>
+
+  <script type="text/javascript">
+    var FanKarrConfig = {
+      pluginUniqueId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+    };
+
+    document.querySelector('#FanKarrSearchConfigPage')
+            .addEventListener('pageshow', function() {
+              Dashboard.showLoadingMsg();
+              ApiClient.getPluginConfiguration(FanKarrConfig.pluginUniqueId).then(function(config) {
+                document.querySelector('#ApiUrl').value = config.ApiUrl || '';
+                Dashboard.hideLoadingMsg();
+              });
+            });
+
+    document.querySelector('#FanKarrSearchConfigForm')
+            .addEventListener('submit', function(e) {
+              e.preventDefault();
+              Dashboard.showLoadingMsg();
+              ApiClient.getPluginConfiguration(FanKarrConfig.pluginUniqueId).then(function(config) {
+                config.ApiUrl = document.querySelector('#ApiUrl').value.trim().replace(/\/$/, '');
+                ApiClient.updatePluginConfiguration(FanKarrConfig.pluginUniqueId, config).then(function(result) {
+                  Dashboard.processPluginConfigurationUpdateResult(result);
+                });
+              });
+              return false;
+            });
+  </script>
 </div>
-
-<script>
-  window.pluginId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
-  window.api = window.ApiClient || parent.ApiClient;
-
-  window.api.getPluginConfiguration(window.pluginId).then(function(config) {
-    document.getElementById('fankarrApiUrl').value = config.ApiUrl || '';
-  });
-
-  document.getElementById('fankarrSave').addEventListener('click', function() {
-    var url = document.getElementById('fankarrApiUrl').value.trim().replace(/\/$/, '');
-    window.api.getPluginConfiguration(window.pluginId).then(function(config) {
-      config.ApiUrl = url;
-      window.api.updatePluginConfiguration(window.pluginId, config).then(function() {
-        var status = document.getElementById('fankarrStatus');
-        status.style.display = 'block';
-        setTimeout(function() { status.style.display = 'none'; }, 3000);
-      });
-    });
-  });
-</script>
 </body>
 </html>
