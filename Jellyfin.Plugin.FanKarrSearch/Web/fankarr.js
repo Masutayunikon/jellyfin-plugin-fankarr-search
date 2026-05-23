@@ -152,12 +152,30 @@
       section = document.createElement('div');
       section.id = SECTION_ID;
       section.innerHTML = `
-        <div class="fankarr-header">
-          <span>Découvrir sur FanKaï</span>
-        </div>
-        <div class="fankarr-grid"></div>
-      `;
-      container.appendChild(section);
+      <div class="fankarr-header sectionTitle sectionTitle-cards padded-left padded-right">
+        Découvrir sur FanKaï
+      </div>
+      <div class="fankarr-grid padded-left padded-right"></div>
+    `;
+
+      // Trouver la section qui contient des épisodes ou des séries
+      const allSections = container.querySelectorAll('.verticalSection');
+      let targetSection = null;
+
+      for (const s of allSections) {
+        const title = s.querySelector('.sectionTitle')?.textContent?.toLowerCase() || '';
+        if (title.includes('épisode')) {
+          targetSection = s;
+          break;
+        }
+      }
+
+      // Insérer avant la section trouvée, sinon à la fin
+      if (targetSection) {
+        container.insertBefore(section, targetSection);
+      } else {
+        container.appendChild(section);
+      }
     }
     return section;
   }
