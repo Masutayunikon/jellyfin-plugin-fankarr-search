@@ -105,7 +105,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 0.5em;
-      padding-right: 0.5em;
+      padding: 0;
     }
     #${SECTION_ID} .fankarr-card {
       position: relative;
@@ -200,7 +200,7 @@
       #${MODAL_ID}-backdrop { align-items: center; }
     }
 
-    /* ── Modale — forcer les couleurs contre le thème ── */
+    /* ── Modale ── */
     #${MODAL_ID} {
       background: var(--jf-palette-background-paper, #1a1a1a) !important;
       border-radius: 16px 16px 0 0;
@@ -267,13 +267,28 @@
       color: #fff !important;
     }
     #${MODAL_ID} .fankarr-modal-actions { display: flex; gap: 0.75em; margin-top: 1em; }
-    #${MODAL_ID} .fankarr-modal-cancel { flex: 1; }
-    #${MODAL_ID} .fankarr-modal-submit { flex: 2; }
+    #${MODAL_ID} .fankarr-modal-cancel {
+      flex: 1;
+      background: rgba(255,255,255,0.1) !important;
+      color: #fff !important;
+      border: 1px solid rgba(255,255,255,0.2) !important;
+    }
+    #${MODAL_ID} .fankarr-modal-submit {
+      flex: 2;
+      background: var(--accent-color, var(--accent, #00a4dc)) !important;
+      color: #fff !important;
+      border: none !important;
+    }
     #${MODAL_ID} .fankarr-modal-loading { text-align: center; padding: 2em 0; color: rgba(255,255,255,0.6) !important; font-size: 0.9em; }
     #${MODAL_ID} .fankarr-modal-success { text-align: center; padding: 2em 1em; }
     #${MODAL_ID} .fankarr-modal-success-icon { font-size: 2.5em; margin-bottom: 0.4em; color: var(--accent-color, var(--accent, #00a4dc)) !important; }
     #${MODAL_ID} .fankarr-modal-success-title { font-weight: 600; margin-bottom: 0.4em; color: #fff !important; }
     #${MODAL_ID} .fankarr-modal-success-sub { color: rgba(255,255,255,0.6) !important; font-size: 0.9em; margin-bottom: 1.5em; }
+    #${MODAL_ID} .fankarr-modal-success button {
+      background: var(--accent-color, var(--accent, #00a4dc)) !important;
+      color: #fff !important;
+      border: none !important;
+    }
   `;
 
   function injectStyles() {
@@ -434,7 +449,7 @@
           Découvrir sur FanKaï
           <img class="fankarr-logo" src="${FANKAI_LOGO}" alt="FanKaï" />
         </h2>
-        <div class="fankarr-grid padded-left"></div>
+        <div class="fankarr-grid padded-left padded-right"></div>
       `;
 
       const allSections = container.querySelectorAll('.verticalSection');
