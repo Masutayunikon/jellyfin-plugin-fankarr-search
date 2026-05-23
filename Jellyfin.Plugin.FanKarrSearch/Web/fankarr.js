@@ -40,11 +40,14 @@
   // ---------------------------------------------------------------------------
 
   async function authenticate() {
-    // Le token Jellyfin est stocké dans localStorage par le client web
-    const jellyfinToken =
-      localStorage.getItem('jellyfin_credentials')
-        ? JSON.parse(localStorage.getItem('jellyfin_credentials')).AccessToken
-        : null;
+    const credentials = localStorage.getItem('jellyfin_credentials');
+    if (!credentials) {
+      console.warn('[FanKarr] Token Jellyfin introuvable.');
+      return false;
+    }
+
+    const parsed = JSON.parse(credentials);
+    const jellyfinToken = parsed?.Servers?.[0]?.AccessToken;
 
     if (!jellyfinToken) {
       console.warn('[FanKarr] Token Jellyfin introuvable.');
