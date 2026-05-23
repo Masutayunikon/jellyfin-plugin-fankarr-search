@@ -219,7 +219,7 @@
       section.id = SECTION_ID;
       section.innerHTML = `
         <div class="fankarr-header">
-          <span>Découvrir sur FanKarr</span>
+          <span>Découvrir sur FanKaï</span>
         </div>
         <div class="fankarr-grid"></div>
       `;
