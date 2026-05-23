@@ -145,7 +145,7 @@
 
     /* ── Modale ── */
     #${MODAL_ID} {
-      background: var(--card-background, var(--content-background, #202020));
+      background: var(--jf-palette-background-paper, var(--card-background, #202020));
       border-radius: 16px 16px 0 0;
       width: 100%;
       max-width: 500px;
