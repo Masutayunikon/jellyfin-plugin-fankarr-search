@@ -16,6 +16,12 @@
           <div class="fieldDescription">Sans slash final. Ex : https://fankarr.mondomaine.com</div>
         </div>
 
+        <div class="inputContainer">
+          <label class="inputLabel inputLabelUnfocused" for="SectionPosition">Position de la section dans les résultats</label>
+          <input id="SectionPosition" name="SectionPosition" type="number" min="1" is="emby-input" placeholder="1" />
+          <div class="fieldDescription">Position parmi les sections de résultats (1 = tout en haut, 2 = après la première section, etc.). Si la valeur dépasse le nombre de sections, la section sera placée à la fin.</div>
+        </div>
+
         <div class="fieldDescription" style="color: #e5a00d; margin-top: 8px;">
           ⚠️ Si Jellyfin est accessible en HTTPS, l'URL FanKarr doit également être en HTTPS.
           Les navigateurs bloquent les appels HTTP depuis une page HTTPS (mixed content).
@@ -41,6 +47,7 @@
               Dashboard.showLoadingMsg();
               ApiClient.getPluginConfiguration(FanKarrConfig.pluginUniqueId).then(function(config) {
                 document.querySelector('#ApiUrl').value = config.ApiUrl || '';
+                document.querySelector('#SectionPosition').value = config.SectionPosition || 1;
                 Dashboard.hideLoadingMsg();
               });
             });
@@ -51,6 +58,7 @@
               Dashboard.showLoadingMsg();
               ApiClient.getPluginConfiguration(FanKarrConfig.pluginUniqueId).then(function(config) {
                 config.ApiUrl = document.querySelector('#ApiUrl').value.trim().replace(/\/$/, '');
+                config.SectionPosition = parseInt(document.querySelector('#SectionPosition').value) || 1;
                 ApiClient.updatePluginConfiguration(FanKarrConfig.pluginUniqueId, config).then(function(result) {
                   Dashboard.processPluginConfigurationUpdateResult(result);
                 });

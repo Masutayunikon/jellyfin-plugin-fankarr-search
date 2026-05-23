@@ -14,12 +14,15 @@
   // ---------------------------------------------------------------------------
 
   let API_URL = '';
+  let SECTION_POSITION = 1; // Position in search results (1 = first, 2 = second, etc.)
   let fankarrToken = sessionStorage.getItem('fankarr_token') || '';
 
   try {
     const res = await fetch('/FanKarrSearch/config');
     const data = await res.json();
     API_URL = (data.ApiUrl || data.apiUrl || '').replace(/\/$/, '');
+    SECTION_POSITION = parseInt(data.SectionPosition || data.sectionPosition) || 1;
+    if (SECTION_POSITION < 1) SECTION_POSITION = 1;
   } catch (e) {
     console.error('[FanKarr] Impossible de charger la config :', e);
     return;
@@ -635,80 +638,109 @@
   // 6. UI — section et cards
   // ---------------------------------------------------------------------------
 
+  let sectionObserver = null;
+
   function getOrCreateSection(container) {
     let section = document.getElementById(SECTION_ID);
-    if (!section) {
-      section = document.createElement('div');
-      section.id = SECTION_ID;
-      section.innerHTML = `
+    if (section) return section;
+
+    section = document.createElement('div');
+    section.id = SECTION_ID;
+    section.innerHTML = `
       <h2 class="sectionTitle sectionTitle-cards focuscontainer-x padded-left padded-right fankarr-section-title">
         Découvrir sur FanKaï
         <img class="fankarr-logo" src="${FANKAI_LOGO}" alt="FanKaï" />
       </h2>
       <div class="fankarr-grid padded-left"></div>
     `;
-      container.appendChild(section);
 
-      // Wheel → horizontal scroll on the grid
-      const grid = section.querySelector('.fankarr-grid');
-      if (grid) {
-        grid.addEventListener('wheel', (e) => {
-          if (e.deltaY === 0) return;
-          e.preventDefault();
-          grid.scrollLeft += e.deltaY;
-        }, { passive: false });
+    insertAtPosition(section, container);
 
-        // Click-drag → horizontal scroll
-        let isDragging = false;
-        let startX = 0;
-        let scrollStart = 0;
-        let hasMoved = false;
-
-        grid.addEventListener('mousedown', (e) => {
-          isDragging = true;
-          hasMoved = false;
-          startX = e.pageX;
-          scrollStart = grid.scrollLeft;
-          grid.style.cursor = 'grabbing';
-          grid.style.userSelect = 'none';
-        });
-
-        window.addEventListener('mousemove', (e) => {
-          if (!isDragging) return;
-          const dx = e.pageX - startX;
-          if (Math.abs(dx) > 3) hasMoved = true;
-          grid.scrollLeft = scrollStart - dx;
-        });
-
-        window.addEventListener('mouseup', () => {
-          if (!isDragging) return;
-          isDragging = false;
-          grid.style.cursor = 'grab';
-          grid.style.userSelect = '';
-        });
-
-        // Block click on cards if we just dragged
-        grid.addEventListener('click', (e) => {
-          if (hasMoved) {
-            e.stopPropagation();
-            e.preventDefault();
-            hasMoved = false;
+    // Watch for React re-renders: if container is about to be cleared,
+    // remove our section first so React doesn't crash on removeChild
+    if (sectionObserver) sectionObserver.disconnect();
+    sectionObserver = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        for (const removed of m.removedNodes) {
+          // React is removing children — pull ours out if it's still in there
+          if (removed === section) return; // we were already removed, fine
+          if (section.parentNode === container) {
+            section.remove();
+            return;
           }
-        }, true);
-
-        grid.style.cursor = 'grab';
-      }
-
-      // Reposition before Episodes section if it appears later
-      setTimeout(() => {
-        const epSection = Array.from(container.querySelectorAll('.verticalSection'))
-            .find(s => s.querySelector('.sectionTitle')?.textContent?.toLowerCase().includes('épisode'));
-        if (epSection && section.parentNode === container) {
-          container.insertBefore(section, epSection);
         }
-      }, 1000);
+      }
+    });
+    sectionObserver.observe(container, { childList: true });
+
+    // Wheel → horizontal scroll on the grid
+    const grid = section.querySelector('.fankarr-grid');
+    if (grid) {
+      grid.addEventListener('wheel', (e) => {
+        if (e.deltaY === 0) return;
+        e.preventDefault();
+        grid.scrollLeft += e.deltaY;
+      }, { passive: false });
+
+      // Click-drag → horizontal scroll
+      let isDragging = false;
+      let startX = 0;
+      let scrollStart = 0;
+      let hasMoved = false;
+
+      grid.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        hasMoved = false;
+        startX = e.pageX;
+        scrollStart = grid.scrollLeft;
+        grid.style.cursor = 'grabbing';
+        grid.style.userSelect = 'none';
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const dx = e.pageX - startX;
+        if (Math.abs(dx) > 3) hasMoved = true;
+        grid.scrollLeft = scrollStart - dx;
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (!isDragging) return;
+        isDragging = false;
+        grid.style.cursor = 'grab';
+        grid.style.userSelect = '';
+      });
+
+      grid.addEventListener('click', (e) => {
+        if (hasMoved) {
+          e.stopPropagation();
+          e.preventDefault();
+          hasMoved = false;
+        }
+      }, true);
+
+      grid.style.cursor = 'grab';
     }
+
     return section;
+  }
+
+  /**
+   * Insert section at SECTION_POSITION among the container's children.
+   * Position is 1-based. If position exceeds child count, appends at the end.
+   */
+  function insertAtPosition(section, container) {
+    const siblings = Array.from(container.children).filter(
+        el => el.id !== SECTION_ID
+    );
+    const pos = Math.max(1, Math.min(SECTION_POSITION, siblings.length + 1));
+    const refNode = siblings[pos - 1] || null;
+
+    if (refNode) {
+      container.insertBefore(section, refNode);
+    } else {
+      container.appendChild(section);
+    }
   }
 
   function renderResults(section, results) {
