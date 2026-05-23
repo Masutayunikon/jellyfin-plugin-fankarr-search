@@ -2,13 +2,6 @@
  * FanKarr Jellyfin Plugin
  * ========================
  * Injecte une section "Découvrir sur FanKarr" dans la page de recherche Jellyfin.
- *
- * Flow:
- *  1. Au chargement, récupère l'URL de l'API via /FanKarr/config
- *  2. Échange le token Jellyfin contre un token FanKarr (POST /api/v1/auth/jellyfin)
- *  3. Observe les changements de page via MutationObserver
- *  4. Sur la page de recherche, intercepte la saisie et affiche les résultats FanKarr
- *  5. Bouton "Demander" → POST /api/v1/requests
  */
 
 (async function FanKarr() {
@@ -36,7 +29,7 @@
   }
 
   // ---------------------------------------------------------------------------
-  // 2. Auth — échange du token Jellyfin
+  // 2. Auth
   // ---------------------------------------------------------------------------
 
   async function authenticate() {
@@ -83,7 +76,6 @@
       headers: { Authorization: `Bearer ${fankarrToken}` },
     });
     if (res.status === 401) {
-      // Token expiré — réauthentifier et réessayer une fois
       await authenticate();
       return apiGet(path);
     }
@@ -107,13 +99,15 @@
   }
 
   // ---------------------------------------------------------------------------
-  // 4. UI — section de résultats
+  // 4. UI
   // ---------------------------------------------------------------------------
 
   const SECTION_ID = 'fankarr-results-section';
+
   const STYLES = `
     #${SECTION_ID} {
       padding: 1.5em 1.5em 0.5em;
+      font-family: var(--font-family, inherit);
     }
     #${SECTION_ID} .fankarr-header {
       display: flex;
@@ -122,76 +116,91 @@
       margin-bottom: 0.75em;
       font-size: 1.1em;
       font-weight: 600;
-      color: var(--text-color);
+      font-family: var(--font-family, inherit);
+      color: var(--text-color, #fff);
+      text-transform: var(--header-text-transform, none);
+      letter-spacing: var(--header-letter-spacing, normal);
     }
     #${SECTION_ID} .fankarr-grid {
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 0.5em;
     }
     #${SECTION_ID} .fankarr-card {
-      width: 130px;
+      width: var(--card-portrait-width, 130px);
       position: relative;
+      font-family: var(--font-family, inherit);
     }
     #${SECTION_ID} .fankarr-card img {
       width: 100%;
-      border-radius: var(--card-border-radius, 6px);
+      border-radius: var(--card-border-radius, 4px);
       aspect-ratio: 2/3;
       object-fit: cover;
-      background: var(--card-background, #222);
+      display: block;
     }
     #${SECTION_ID} .fankarr-card .fankarr-title {
-      font-size: 0.78em;
+      font-size: var(--card-text-size, 0.8em);
       margin-top: 4px;
       text-align: center;
-      color: var(--text-color);
+      color: var(--text-color, #fff);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      font-family: var(--font-family, inherit);
     }
     #${SECTION_ID} .fankarr-card .fankarr-meta {
-      font-size: 0.7em;
+      font-size: calc(var(--card-text-size, 0.8em) * 0.9);
       text-align: center;
-      color: var(--text-color-secondary);
+      color: var(--text-color-secondary, #aaa);
+      font-family: var(--font-family, inherit);
     }
     #${SECTION_ID} .fankarr-card .fankarr-badge {
       position: absolute;
-      top: 5px;
-      left: 5px;
-      background: var(--accent-color);
-      color: var(--accent-color-foreground, #fff);
-      font-size: 0.65em;
+      top: 4px;
+      left: 4px;
+      background: var(--accent-color, #00a4dc);
+      color: #fff;
+      font-size: 0.6em;
       font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 4px;
+      padding: 2px 5px;
+      border-radius: 3px;
       text-transform: uppercase;
+      font-family: var(--font-family, inherit);
     }
     #${SECTION_ID} .fankarr-btn {
       display: block;
       width: 100%;
-      margin-top: 6px;
-      padding: 4px 0;
+      margin-top: 5px;
+      padding: 6px 0;
       border: none;
-      border-radius: var(--button-border-radius, 4px);
-      background: var(--accent-color);
-      color: var(--accent-color-foreground, #fff);
-      font-size: 0.72em;
+      border-radius: var(--button-border-radius, var(--card-border-radius, 4px));
+      background: var(--accent-color, #00a4dc);
+      color: #fff;
+      font-size: 0.75em;
       font-weight: 600;
+      font-family: var(--font-family, inherit);
       cursor: pointer;
-      transition: opacity 0.15s;
+      transition: filter 0.15s;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
-    #${SECTION_ID} .fankarr-btn:hover { opacity: 0.85; }
+    #${SECTION_ID} .fankarr-btn:hover {
+      filter: brightness(1.15);
+    }
     #${SECTION_ID} .fankarr-btn:disabled {
-      background: var(--button-background, #555);
-      opacity: 0.6;
+      background: var(--card-background, #333);
+      color: var(--text-color-secondary, #aaa);
       cursor: default;
+      filter: none;
     }
     #${SECTION_ID} .fankarr-btn.requested {
       background: var(--success-color, #2e7d32);
+      color: #fff;
     }
     #${SECTION_ID} .fankarr-empty {
-      color: var(--text-color-secondary);
+      color: var(--text-color-secondary, #aaa);
       font-size: 0.9em;
+      font-family: var(--font-family, inherit);
     }
   `;
 
@@ -209,13 +218,12 @@
       section = document.createElement('div');
       section.id = SECTION_ID;
       section.innerHTML = `
-      <div class="fankarr-header">
-        <span>🎬</span>
-        <span>Découvrir sur FanKarr</span>
-      </div>
-      <div class="fankarr-grid"></div>
-    `;
-      container.appendChild(section); // à la fin
+        <div class="fankarr-header">
+          <span>Découvrir sur FanKarr</span>
+        </div>
+        <div class="fankarr-grid"></div>
+      `;
+      container.appendChild(section);
     }
     return section;
   }
@@ -224,31 +232,31 @@
     const grid = section.querySelector('.fankarr-grid');
     grid.innerHTML = '';
 
-    if (!results || results.length === 0) {
-      grid.innerHTML = '<span class="fankarr-empty">Aucun résultat sur FanKarr.</span>';
-      return;
-    }
-
     results.forEach(item => {
       const card = document.createElement('div');
       card.className = 'fankarr-card';
 
       const isRequested = requestedIds.has(item.id);
       const type = item.type === 'series' ? 'SÉRIE' : 'FILM';
-      const year = item.year ? item.year : '';
-      const poster = item.image || item.posterPath
-          ? (item.image || `https://image.tmdb.org/t/p/w200${item.posterPath}`)
-          : 'data:image/svg+xml,...';
+      const year = item.year || '';
+      const poster = item.image
+          ? item.image
+          : item.posterPath
+              ? `https://image.tmdb.org/t/p/w200${item.posterPath}`
+              : null;
+
+      const imgHtml = poster
+          ? `<img src="${escapeHtml(poster)}" alt="${escapeHtml(item.title)}" loading="lazy" />`
+          : `<div style="width:100%;aspect-ratio:2/3;background:var(--card-background,#333);border-radius:var(--card-border-radius,4px);display:flex;align-items:center;justify-content:center;color:var(--text-color-secondary,#aaa);font-size:0.7em;">No Image</div>`;
 
       card.innerHTML = `
         <span class="fankarr-badge">${type}</span>
-        <img src="${poster}" alt="${escapeHtml(item.title)}" loading="lazy" />
+        ${imgHtml}
         <div class="fankarr-title" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</div>
-        <div class="fankarr-meta">${year}</div>
+        <div class="fankarr-meta">${escapeHtml(String(year))}</div>
         <button
-          class="fankarr-btn ${isRequested ? 'requested' : ''}"
+          class="fankarr-btn${isRequested ? ' requested' : ''}"
           data-id="${item.id}"
-          data-type="${item.type}"
           ${isRequested ? 'disabled' : ''}
         >${isRequested ? '✓ Demandé' : '+ Demander'}</button>
       `;
@@ -287,12 +295,11 @@
   let searchTimeout = null;
   let lastQuery = '';
 
-  // Récupère les IDs déjà demandés pour afficher le bon état des boutons
   async function fetchRequestedIds() {
     try {
       const data = await apiGet('/api/v1/requests');
       const items = data.results || data || [];
-      return new Set(items.map(r => r.media?.id || r.mediaId));
+      return new Set(items.map(r => r.serieId || r.media?.id || r.mediaId));
     } catch {
       return new Set();
     }
@@ -316,7 +323,6 @@
 
       const results = searchData.results || searchData || [];
 
-      // Ne pas afficher la section si aucun résultat
       if (!results || results.length === 0) {
         const existing = document.getElementById(SECTION_ID);
         if (existing) existing.remove();
@@ -327,14 +333,13 @@
       renderResults(section, results, requestedIds);
     } catch (e) {
       console.error('[FanKarr] Erreur de recherche :', e);
-      // Masquer la section en cas d'erreur
       const existing = document.getElementById(SECTION_ID);
       if (existing) existing.remove();
     }
   }
 
   // ---------------------------------------------------------------------------
-  // 6. Observer — détecte la page de recherche et l'input
+  // 6. Observer
   // ---------------------------------------------------------------------------
 
   function findSearchInput() {
@@ -342,7 +347,6 @@
   }
 
   function findSearchContainer() {
-    // Cherche le conteneur parent de la page de recherche
     return (
         document.querySelector('.searchResults') ||
         document.querySelector('.padded-left.padded-right') ||
@@ -371,27 +375,23 @@
     input.addEventListener('input', () => {
       clearTimeout(searchTimeout);
       const query = input.value.trim();
-
       searchTimeout = setTimeout(() => {
         const container = findSearchContainer();
         if (container) onSearch(query, container);
-      }, 400); // debounce 400ms
+      }, 400);
     });
 
-    // Si l'input a déjà une valeur (retour sur la page)
     if (input.value) {
       const container = findSearchContainer();
       if (container) onSearch(input.value.trim(), container);
     }
   }
 
-  // MutationObserver pour détecter les changements de page (SPA)
   const observer = new MutationObserver(() => {
     if (isSearchPage()) {
       injectStyles();
       attachInputListener();
     } else {
-      // Réinitialiser quand on quitte la page de recherche
       inputListenerAttached = false;
       lastQuery = '';
     }
@@ -405,12 +405,10 @@
 
   injectStyles();
 
-  // Auth initiale
   if (!fankarrToken) {
     await authenticate();
   }
 
-  // Au cas où on charge directement sur la page de recherche
   if (isSearchPage()) {
     attachInputListener();
   }
@@ -423,9 +421,9 @@
 
   function escapeHtml(str) {
     return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
   }
 })();
