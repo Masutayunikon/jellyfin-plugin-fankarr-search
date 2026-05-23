@@ -288,19 +288,18 @@
       background: var(--accent-color, var(--accent, #00a4dc)) !important;
       color: #fff !important;
     }
-    /* Already-requested seasons: shown as "already done", not selectable */
+    /* Already-requested seasons: shown as selected + locked */
     #${MODAL_ID} .fankarr-season-btn.already {
-      border-color: rgba(0, 164, 220, 0.5) !important;
-      background: rgba(0, 164, 220, 0.12) !important;
-      color: rgba(255,255,255,0.45) !important;
+      border-color: var(--accent-color, var(--accent, #00a4dc)) !important;
+      background: var(--accent-color, var(--accent, #00a4dc)) !important;
+      color: #fff !important;
       cursor: default;
+      opacity: 0.55;
       position: relative;
     }
     #${MODAL_ID} .fankarr-season-btn.already::after {
-      content: '✓';
-      display: block;
+      content: ' ✓';
       font-size: 0.85em;
-      color: var(--accent-color, var(--accent, #00a4dc)) !important;
     }
 
     #${MODAL_ID} .fankarr-modal-actions { display: flex; gap: 0.75em; margin-top: 1em; }
@@ -453,10 +452,10 @@
         const isAlready = alreadySet.has(s.season_number);
         const isSelected = selectedSeasons.has(s.season_number);
         let cls = 'fankarr-season-btn';
-        if (isAlready) cls += ' already';
+        if (isAlready) cls += ' already selected';
         else if (isSelected) cls += ' selected';
         return `
-              <button class="${cls}" data-season="${s.season_number}" ${isAlready ? 'disabled' : ''}>
+              <button class="${cls}" data-season="${s.season_number}" ${isAlready ? 'disabled title="Déjà demandée"' : ''}>
                 Saison ${s.season_number}
               </button>
             `;
@@ -686,7 +685,26 @@
     } catch { return new Map(); }
   }
 
-  async function onSearch(query, container) {
+  // Wait for .searchResults to appear in the DOM (max ~3s)
+  function waitForSearchResults(maxWait = 3000) {
+    return new Promise(resolve => {
+      const existing = document.querySelector('.searchResults');
+      if (existing) return resolve(existing);
+
+      const interval = 100;
+      let elapsed = 0;
+      const timer = setInterval(() => {
+        const el = document.querySelector('.searchResults');
+        elapsed += interval;
+        if (el || elapsed >= maxWait) {
+          clearInterval(timer);
+          resolve(el || null);
+        }
+      }, interval);
+    });
+  }
+
+  async function onSearch(query) {
     if (!query || query.length < 2) {
       const existing = document.getElementById(SECTION_ID);
       if (existing) existing.remove();
@@ -695,14 +713,18 @@
     if (query === lastQuery) return;
     lastQuery = query;
 
-    // Always prefer .searchResults; fall back to the passed container
-    const realContainer = document.querySelector('.searchResults') || container;
-
     try {
-      const [searchData, requestedMap] = await Promise.all([
+      const [searchData, requestedMap, realContainer] = await Promise.all([
         apiGet(`/api/v1/series/search?q=${encodeURIComponent(query)}`),
         fetchRequestedMap(),
+        waitForSearchResults(),
       ]);
+
+      if (!realContainer) {
+        console.warn('[FanKarr] .searchResults introuvable, injection annulée.');
+        return;
+      }
+
       const results = searchData.results || searchData || [];
       if (!results || results.length === 0) {
         const existing = document.getElementById(SECTION_ID);
@@ -725,15 +747,6 @@
 
   function findSearchInput() { return document.querySelector('#searchTextInput'); }
 
-  function findSearchContainer() {
-    // Prefer .searchResults (appears after first keystroke in Jellyfin)
-    const sr = document.querySelector('.searchResults');
-    if (sr) return sr;
-    // Fallback: closest page wrapper
-    return document.querySelector('#searchTextInput')
-        ?.closest('[data-role="page"]') ?? null;
-  }
-
   function isSearchPage() {
     return window.location.hash.includes('search') || !!document.querySelector('#searchTextInput');
   }
@@ -748,14 +761,10 @@
     input.addEventListener('input', () => {
       clearTimeout(searchTimeout);
       const query = input.value.trim();
-      searchTimeout = setTimeout(() => {
-        const container = findSearchContainer();
-        if (container) onSearch(query, container);
-      }, 400);
+      searchTimeout = setTimeout(() => onSearch(query), 400);
     });
     if (input.value) {
-      const container = findSearchContainer();
-      if (container) onSearch(input.value.trim(), container);
+      onSearch(input.value.trim());
     }
   }
 
