@@ -105,6 +105,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 0.5em;
+      padding-right: 0.5em;
     }
     #${SECTION_ID} .fankarr-card {
       position: relative;
@@ -116,7 +117,7 @@
       left: 6px;
       z-index: 2;
       background: var(--accent-color, var(--accent, #00a4dc));
-      color: #fff;
+      color: #fff !important;
       font-size: 0.6em;
       font-weight: 700;
       padding: 2px 6px;
@@ -145,7 +146,7 @@
       opacity: 1;
     }
     #${SECTION_ID} .fankarr-overlay-desc {
-      color: #fff;
+      color: #fff !important;
       font-size: 0.7em;
       text-align: center;
       line-height: 1.3;
@@ -161,10 +162,11 @@
       font-size: 0.72em;
       padding: 0.45em 0.25em;
       white-space: nowrap;
-      display: flex;
+      display: flex !important;
       align-items: center;
       justify-content: center;
       gap: 0.3em;
+      color: #fff !important;
     }
     #${SECTION_ID} .fankarr-card .cardText-first {
       overflow: hidden;
@@ -180,11 +182,7 @@
       color: var(--text-color-secondary, #aaa);
       margin-top: 1px;
     }
-    #${SECTION_ID} .fankarr-rating {
-      display: flex;
-      align-items: center;
-      gap: 0.2em;
-    }
+    #${SECTION_ID} .fankarr-rating { display: flex; align-items: center; gap: 0.2em; }
     #${SECTION_ID} .fankarr-rating-star { color: #f5c518; }
 
     /* ── Backdrop ── */
@@ -202,9 +200,9 @@
       #${MODAL_ID}-backdrop { align-items: center; }
     }
 
-    /* ── Modale ── */
+    /* ── Modale — forcer les couleurs contre le thème ── */
     #${MODAL_ID} {
-      background: var(--jf-palette-background-paper, var(--card-background, #202020));
+      background: var(--jf-palette-background-paper, #1a1a1a) !important;
       border-radius: 16px 16px 0 0;
       width: 100%;
       max-width: 500px;
@@ -213,7 +211,7 @@
       padding: 1.5em;
       box-sizing: border-box;
       font-family: var(--font-family, inherit);
-      color: var(--text-color, #fff);
+      color: #fff !important;
       transform: translateY(100%);
       transition: transform 0.3s ease;
     }
@@ -228,26 +226,54 @@
       }
       #${MODAL_ID}-backdrop.open #${MODAL_ID} { transform: scale(1); opacity: 1; }
     }
+    #${MODAL_ID} * { color: #fff !important; box-sizing: border-box; }
     #${MODAL_ID} .fankarr-modal-header { display: flex; align-items: center; gap: 1em; margin-bottom: 1.25em; }
     #${MODAL_ID} .fankarr-modal-poster { width: 60px; aspect-ratio: 2/3; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
-    #${MODAL_ID} .fankarr-modal-title { font-size: 1.1em; font-weight: 600; color: var(--text-color, #fff); }
-    #${MODAL_ID} .fankarr-modal-close { margin-left: auto; background: none; border: none; color: var(--text-color-secondary, #aaa); font-size: 1.5em; cursor: pointer; padding: 0; line-height: 1; flex-shrink: 0; }
-    #${MODAL_ID} .fankarr-modal-close:hover { color: var(--text-color, #fff); }
-    #${MODAL_ID} .fankarr-modal-subtitle { font-size: 0.85em; color: var(--text-color-secondary, #aaa); margin-top: 0.2em; }
-    #${MODAL_ID} .fankarr-select-all { width: 100%; padding: 0.6em; border: 2px dashed var(--border-color, var(--text-color-secondary, #555)); border-radius: 8px; background: transparent; color: var(--text-color-secondary, #aaa); font-size: 0.85em; font-family: var(--font-family, inherit); cursor: pointer; margin-bottom: 0.75em; transition: border-color 0.15s, color 0.15s; }
-    #${MODAL_ID} .fankarr-select-all:hover, #${MODAL_ID} .fankarr-select-all.selected { border-color: var(--accent-color, var(--accent, #00a4dc)); color: var(--accent-color, var(--accent, #00a4dc)); }
+    #${MODAL_ID} .fankarr-modal-title { font-size: 1.1em; font-weight: 600; color: #fff !important; }
+    #${MODAL_ID} .fankarr-modal-close { margin-left: auto; background: none !important; border: none; color: rgba(255,255,255,0.5) !important; font-size: 1.5em; cursor: pointer; padding: 0; line-height: 1; flex-shrink: 0; }
+    #${MODAL_ID} .fankarr-modal-close:hover { color: #fff !important; }
+    #${MODAL_ID} .fankarr-modal-subtitle { font-size: 0.85em; color: rgba(255,255,255,0.6) !important; margin-top: 0.2em; }
+    #${MODAL_ID} .fankarr-modal-desc { font-size: 0.82em; color: rgba(255,255,255,0.7) !important; line-height: 1.5; margin-bottom: 1em; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+    #${MODAL_ID} .fankarr-select-all {
+      width: 100%; padding: 0.6em;
+      border: 2px dashed rgba(255,255,255,0.3) !important;
+      border-radius: 8px;
+      background: transparent !important;
+      color: rgba(255,255,255,0.6) !important;
+      font-size: 0.85em; font-family: var(--font-family, inherit);
+      cursor: pointer; margin-bottom: 0.75em;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    #${MODAL_ID} .fankarr-select-all:hover,
+    #${MODAL_ID} .fankarr-select-all.selected {
+      border-color: var(--accent-color, var(--accent, #00a4dc)) !important;
+      color: var(--accent-color, var(--accent, #00a4dc)) !important;
+    }
     #${MODAL_ID} .fankarr-seasons-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 0.5em; margin-bottom: 1.25em; }
-    #${MODAL_ID} .fankarr-season-btn { padding: 0.6em 0.25em; border: 2px solid var(--border-color, var(--text-color-secondary, #555)); border-radius: 8px; background: transparent; color: var(--text-color, #fff); font-size: 0.8em; font-family: var(--font-family, inherit); cursor: pointer; text-align: center; transition: border-color 0.15s, background 0.15s, color 0.15s; }
-    #${MODAL_ID} .fankarr-season-btn:hover { border-color: var(--accent-color, var(--accent, #00a4dc)); }
-    #${MODAL_ID} .fankarr-season-btn.selected { border-color: var(--accent-color, var(--accent, #00a4dc)); background: var(--accent-color, var(--accent, #00a4dc)); color: #fff; }
+    #${MODAL_ID} .fankarr-season-btn {
+      padding: 0.6em 0.25em;
+      border: 2px solid rgba(255,255,255,0.25) !important;
+      border-radius: 8px;
+      background: transparent !important;
+      color: #fff !important;
+      font-size: 0.8em; font-family: var(--font-family, inherit);
+      cursor: pointer; text-align: center;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    #${MODAL_ID} .fankarr-season-btn:hover { border-color: var(--accent-color, var(--accent, #00a4dc)) !important; }
+    #${MODAL_ID} .fankarr-season-btn.selected {
+      border-color: var(--accent-color, var(--accent, #00a4dc)) !important;
+      background: var(--accent-color, var(--accent, #00a4dc)) !important;
+      color: #fff !important;
+    }
     #${MODAL_ID} .fankarr-modal-actions { display: flex; gap: 0.75em; margin-top: 1em; }
     #${MODAL_ID} .fankarr-modal-cancel { flex: 1; }
     #${MODAL_ID} .fankarr-modal-submit { flex: 2; }
-    #${MODAL_ID} .fankarr-modal-loading { text-align: center; padding: 2em 0; color: var(--text-color-secondary, #aaa); font-size: 0.9em; }
+    #${MODAL_ID} .fankarr-modal-loading { text-align: center; padding: 2em 0; color: rgba(255,255,255,0.6) !important; font-size: 0.9em; }
     #${MODAL_ID} .fankarr-modal-success { text-align: center; padding: 2em 1em; }
-    #${MODAL_ID} .fankarr-modal-success-icon { font-size: 2.5em; margin-bottom: 0.4em; color: var(--accent-color, var(--accent, #00a4dc)); }
-    #${MODAL_ID} .fankarr-modal-success-title { font-weight: 600; margin-bottom: 0.4em; color: var(--text-color, #fff); }
-    #${MODAL_ID} .fankarr-modal-success-sub { color: var(--text-color-secondary, #aaa); font-size: 0.9em; margin-bottom: 1.5em; }
+    #${MODAL_ID} .fankarr-modal-success-icon { font-size: 2.5em; margin-bottom: 0.4em; color: var(--accent-color, var(--accent, #00a4dc)) !important; }
+    #${MODAL_ID} .fankarr-modal-success-title { font-weight: 600; margin-bottom: 0.4em; color: #fff !important; }
+    #${MODAL_ID} .fankarr-modal-success-sub { color: rgba(255,255,255,0.6) !important; font-size: 0.9em; margin-bottom: 1.5em; }
   `;
 
   function injectStyles() {
@@ -300,9 +326,11 @@
     openModal();
 
     let seasons = [];
+    let serieDesc = item.description || '';
     try {
       const data = await apiGet(`/api/v1/series/${item.id}`);
       seasons = data.seasons || [];
+      if (data.description) serieDesc = data.description;
     } catch (e) {
       console.error('[FanKarr] Erreur chargement saisons :', e);
     }
@@ -318,12 +346,13 @@
       modal.innerHTML = `
         <div class="fankarr-modal-header">
           ${posterHtml}
-          <div>
+          <div style="flex:1;min-width:0;">
             <div class="fankarr-modal-title">${escapeHtml(item.title)}</div>
-            <div class="fankarr-modal-subtitle">${seasons.length} saison${seasons.length > 1 ? 's' : ''}</div>
+            <div class="fankarr-modal-subtitle">${seasons.length} saison${seasons.length > 1 ? 's' : ''}${item.year ? ' · ' + item.year : ''}${item.rating ? ' · ★ ' + Number(item.rating).toFixed(1) : ''}</div>
           </div>
           <button class="fankarr-modal-close" aria-label="Fermer">×</button>
         </div>
+        ${serieDesc ? `<div class="fankarr-modal-desc">${escapeHtml(serieDesc)}</div>` : ''}
         <button class="fankarr-select-all${allSelected ? ' selected' : ''}">
           ${allSelected ? '✓ Toute la série sélectionnée' : 'Sélectionner toute la série'}
         </button>
@@ -395,16 +424,6 @@
   // 6. UI — section et cards
   // ---------------------------------------------------------------------------
 
-  function syncGridPadding(container, grid) {
-    const ref = container.querySelector('.padded-left');
-    if (ref && grid) {
-      const pl = getComputedStyle(ref).paddingLeft;
-      const pr = getComputedStyle(ref).paddingRight;
-      grid.style.paddingLeft = pl;
-      grid.style.paddingRight = pr;
-    }
-  }
-
   function getOrCreateSection(container) {
     let section = document.getElementById(SECTION_ID);
     if (!section) {
@@ -415,7 +434,7 @@
           Découvrir sur FanKaï
           <img class="fankarr-logo" src="${FANKAI_LOGO}" alt="FanKaï" />
         </h2>
-        <div class="fankarr-grid"></div>
+        <div class="fankarr-grid padded-left"></div>
       `;
 
       const allSections = container.querySelectorAll('.verticalSection');
@@ -433,11 +452,6 @@
         });
         obs.observe(container, { childList: true, subtree: false });
       }
-
-      // Sync padding avec .padded-left de Jellyfin
-      const grid = section.querySelector('.fankarr-grid');
-      syncGridPadding(container, grid);
-      window.addEventListener('resize', () => syncGridPadding(container, grid));
     }
     return section;
   }
