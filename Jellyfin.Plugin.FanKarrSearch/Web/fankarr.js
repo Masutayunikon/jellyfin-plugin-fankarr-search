@@ -48,9 +48,10 @@
 
     const parsed = JSON.parse(credentials);
     const jellyfinToken = parsed?.Servers?.[0]?.AccessToken;
+    const jellyfinUserId = parsed?.Servers?.[0]?.UserId;
 
-    if (!jellyfinToken) {
-      console.warn('[FanKarr] Token Jellyfin introuvable.');
+    if (!jellyfinToken || !jellyfinUserId) {
+      console.warn('[FanKarr] Token ou UserId Jellyfin introuvable.');
       return false;
     }
 
@@ -58,7 +59,7 @@
       const res = await fetch(`${API_URL}/api/v1/auth/jellyfin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: jellyfinToken }),
+        body: JSON.stringify({ jellyfinToken, jellyfinUserId }),
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
