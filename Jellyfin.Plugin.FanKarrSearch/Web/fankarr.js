@@ -24,7 +24,7 @@
   try {
     const res = await fetch('/FanKarrSearch/config');
     const data = await res.json();
-    API_URL = (data.apiUrl || '').replace(/\/$/, '');
+    API_URL = (data.ApiUrl || data.apiUrl || '').replace(/\/$/, '');
   } catch (e) {
     console.error('[FanKarr] Impossible de charger la config :', e);
     return;
