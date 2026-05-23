@@ -104,11 +104,13 @@
     #${SECTION_ID} .fankarr-grid {
       display: flex;
       flex-wrap: wrap;
-      gap: 0 0.5em 0.5em 0;
+      row-gap: 0.5em;
+      column-gap: 0;
     }
     #${SECTION_ID} .fankarr-card {
       position: relative;
       cursor: pointer;
+      margin-right: 0.5em;
     }
     #${SECTION_ID} .fankarr-badge {
       position: absolute;
@@ -447,13 +449,11 @@
       section = document.createElement('div');
       section.id = SECTION_ID;
       section.innerHTML = `
-        <div class="padded-left padded-right">
-          <h2 class="sectionTitle sectionTitle-cards focuscontainer-x fankarr-section-title">
-            Découvrir sur FanKaï
-            <img class="fankarr-logo" src="${FANKAI_LOGO}" alt="FanKaï" />
-          </h2>
-          <div class="fankarr-grid"></div>
-        </div>
+        <h2 class="sectionTitle sectionTitle-cards focuscontainer-x padded-left padded-right fankarr-section-title">
+          Découvrir sur FanKaï
+          <img class="fankarr-logo" src="${FANKAI_LOGO}" alt="FanKaï" />
+        </h2>
+        <div class="fankarr-grid padded-left"></div>
       `;
 
       const allSections = container.querySelectorAll('.verticalSection');
