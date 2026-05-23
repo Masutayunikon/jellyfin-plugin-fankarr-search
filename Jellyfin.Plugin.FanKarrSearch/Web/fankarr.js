@@ -101,7 +101,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 0.5em;
-      padding: 0.5em 1em;
+      padding: 0.5em 0;
     }
     #${SECTION_ID} .fankarr-card {
       position: relative;
