@@ -649,6 +649,56 @@
     `;
       container.appendChild(section);
 
+      // Wheel → horizontal scroll on the grid
+      const grid = section.querySelector('.fankarr-grid');
+      if (grid) {
+        grid.addEventListener('wheel', (e) => {
+          if (e.deltaY === 0) return;
+          e.preventDefault();
+          grid.scrollLeft += e.deltaY;
+        }, { passive: false });
+
+        // Click-drag → horizontal scroll
+        let isDragging = false;
+        let startX = 0;
+        let scrollStart = 0;
+        let hasMoved = false;
+
+        grid.addEventListener('mousedown', (e) => {
+          isDragging = true;
+          hasMoved = false;
+          startX = e.pageX;
+          scrollStart = grid.scrollLeft;
+          grid.style.cursor = 'grabbing';
+          grid.style.userSelect = 'none';
+        });
+
+        window.addEventListener('mousemove', (e) => {
+          if (!isDragging) return;
+          const dx = e.pageX - startX;
+          if (Math.abs(dx) > 3) hasMoved = true;
+          grid.scrollLeft = scrollStart - dx;
+        });
+
+        window.addEventListener('mouseup', () => {
+          if (!isDragging) return;
+          isDragging = false;
+          grid.style.cursor = 'grab';
+          grid.style.userSelect = '';
+        });
+
+        // Block click on cards if we just dragged
+        grid.addEventListener('click', (e) => {
+          if (hasMoved) {
+            e.stopPropagation();
+            e.preventDefault();
+            hasMoved = false;
+          }
+        }, true);
+
+        grid.style.cursor = 'grab';
+      }
+
       // Reposition before Episodes section if it appears later
       setTimeout(() => {
         const epSection = Array.from(container.querySelectorAll('.verticalSection'))
