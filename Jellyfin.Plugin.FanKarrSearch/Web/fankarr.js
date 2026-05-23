@@ -22,7 +22,7 @@
   let fankarrToken = sessionStorage.getItem('fankarr_token') || '';
 
   try {
-    const res = await fetch('/FanKarr/config');
+    const res = await fetch('/FanKarrSearch/config');
     const data = await res.json();
     API_URL = (data.apiUrl || '').replace(/\/$/, '');
   } catch (e) {
