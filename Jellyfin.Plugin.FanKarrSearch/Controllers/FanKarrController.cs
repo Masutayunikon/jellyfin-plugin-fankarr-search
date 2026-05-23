@@ -27,8 +27,10 @@ public class FanKarrSearchController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public ActionResult<ConfigResponse> GetConfig()
     {
-        var apiUrl = Plugin.Instance?.Configuration.ApiUrl ?? string.Empty;
-        return Ok(new ConfigResponse(apiUrl));
+        var config = Plugin.Instance?.Configuration;
+        var apiUrl = config?.ApiUrl ?? string.Empty;
+        var sectionPosition = config?.SectionPosition ?? 1;
+        return Ok(new ConfigResponse(apiUrl, sectionPosition));
     }
 
     // -------------------------------------------------------------------------
@@ -58,5 +60,5 @@ public class FanKarrSearchController : ControllerBase
     // DTO
     // -------------------------------------------------------------------------
 
-    public record ConfigResponse(string ApiUrl);
+    public record ConfigResponse(string ApiUrl, int SectionPosition);
 }
