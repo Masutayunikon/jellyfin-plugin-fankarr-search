@@ -480,6 +480,7 @@
 
   function renderResults(section, results, requestedIds) {
     const grid = section.querySelector('.fankarr-grid');
+    if (!grid) return; // sécurité
     grid.innerHTML = '';
 
     results.forEach(item => {
@@ -565,6 +566,9 @@
         return;
       }
       const section = getOrCreateSection(container);
+      // Attendre que la grid soit disponible
+      const grid = section.querySelector('.fankarr-grid');
+      if (!grid) return;
       renderResults(section, results, requestedIds);
     } catch (e) {
       console.error('[FanKarr] Erreur recherche :', e);
