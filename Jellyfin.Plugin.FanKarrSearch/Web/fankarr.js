@@ -461,17 +461,15 @@
       section = document.createElement('div');
       section.id = SECTION_ID;
       section.innerHTML = `
-        <h2 class="sectionTitle sectionTitle-cards focuscontainer-x padded-left padded-right fankarr-section-title">
-          Découvrir sur FanKaï
-          <img class="fankarr-logo" src="${FANKAI_LOGO}" alt="FanKaï" />
-        </h2>
-        <div class="fankarr-grid padded-left"></div>
-      `;
+      <h2 class="sectionTitle sectionTitle-cards focuscontainer-x padded-left padded-right fankarr-section-title">
+        Découvrir sur FanKaï
+        <img class="fankarr-logo" src="${FANKAI_LOGO}" alt="FanKaï" />
+      </h2>
+      <div class="fankarr-grid padded-left"></div>
+    `;
 
-      // Essai immédiat
       if (!insertBeforeEpisodes(section, container)) {
         container.appendChild(section);
-        // Retry toutes les 200ms pendant 3s max
         let attempts = 0;
         const interval = setInterval(() => {
           attempts++;
@@ -571,10 +569,8 @@
         if (existing) existing.remove();
         return;
       }
+
       const section = getOrCreateSection(container);
-      // Attendre que la grid soit disponible
-      const grid = section.querySelector('.fankarr-grid');
-      if (!grid) return;
       renderResults(section, results, requestedIds);
     } catch (e) {
       console.error('[FanKarr] Erreur recherche :', e);
