@@ -12,4 +12,10 @@ public class PluginConfiguration : BasePluginConfiguration
     /// Example: https://fankarr.example.com
     /// </summary>
     public string ApiUrl { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the position of the FanKarr section in search results.
+    /// 1 = first, 2 = after first section, etc.
+    /// </summary>
+    public int SectionPosition { get; set; } = 1;
 }
