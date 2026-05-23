@@ -443,33 +443,36 @@
   // 6. UI — section et cards
   // ---------------------------------------------------------------------------
 
+  function insertBeforeEpisodes(section, container) {
+    const allSections = container.querySelectorAll('.verticalSection');
+    for (const s of allSections) {
+      const title = s.querySelector('.sectionTitle')?.textContent?.toLowerCase() || '';
+      if (title.includes('épisode')) {
+        container.insertBefore(section, s);
+        return true;
+      }
+    }
+    return false;
+  }
+
   function getOrCreateSection(container) {
     let section = document.getElementById(SECTION_ID);
     if (!section) {
       section = document.createElement('div');
       section.id = SECTION_ID;
-      section.innerHTML = `
-        <h2 class="sectionTitle sectionTitle-cards focuscontainer-x padded-left padded-right fankarr-section-title">
-          Découvrir sur FanKaï
-          <img class="fankarr-logo" src="${FANKAI_LOGO}" alt="FanKaï" />
-        </h2>
-        <div class="fankarr-grid padded-left"></div>
-      `;
+      section.innerHTML = `...`; // ton HTML habituel
 
-      const allSections = container.querySelectorAll('.verticalSection');
-      let found = false;
-      for (const s of allSections) {
-        const title = s.querySelector('.sectionTitle')?.textContent?.toLowerCase() || '';
-        if (title.includes('épisode')) { container.insertBefore(section, s); found = true; break; }
-      }
-      if (!found) {
+      // Essai immédiat
+      if (!insertBeforeEpisodes(section, container)) {
         container.appendChild(section);
-        const obs = new MutationObserver(() => {
-          const epSection = Array.from(container.querySelectorAll('.verticalSection'))
-              .find(s => s.querySelector('.sectionTitle')?.textContent?.toLowerCase().includes('épisode'));
-          if (epSection && section.parentNode === container) { container.insertBefore(section, epSection); obs.disconnect(); }
-        });
-        obs.observe(container, { childList: true, subtree: false });
+        // Retry toutes les 200ms pendant 3s max
+        let attempts = 0;
+        const interval = setInterval(() => {
+          attempts++;
+          if (insertBeforeEpisodes(section, container) || attempts > 15) {
+            clearInterval(interval);
+          }
+        }, 200);
       }
     }
     return section;
