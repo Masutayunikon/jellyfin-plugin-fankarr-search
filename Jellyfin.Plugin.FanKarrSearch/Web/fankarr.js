@@ -638,9 +638,7 @@
   // 6. UI — section et cards
   // ---------------------------------------------------------------------------
 
-  let sectionObserver = null;
-
-  function getOrCreateSection(container) {
+  function getOrCreateSection(searchResultsEl) {
     let section = document.getElementById(SECTION_ID);
     if (section) return section;
 
@@ -654,24 +652,20 @@
       <div class="fankarr-grid padded-left"></div>
     `;
 
-    insertAtPosition(section, container);
+    // Insert at the configured position among searchResults children
+    const siblings = Array.from(searchResultsEl.children).filter(el => el.id !== SECTION_ID);
+    const pos = Math.max(1, Math.min(SECTION_POSITION, siblings.length + 1));
+    const refNode = siblings[pos - 1] || null;
+    if (refNode) {
+      searchResultsEl.insertBefore(section, refNode);
+    } else {
+      searchResultsEl.appendChild(section);
+    }
 
-    // Watch for React re-renders: if container is about to be cleared,
-    // remove our section first so React doesn't crash on removeChild
-    if (sectionObserver) sectionObserver.disconnect();
-    sectionObserver = new MutationObserver((mutations) => {
-      for (const m of mutations) {
-        for (const removed of m.removedNodes) {
-          // React is removing children — pull ours out if it's still in there
-          if (removed === section) return; // we were already removed, fine
-          if (section.parentNode === container) {
-            section.remove();
-            return;
-          }
-        }
-      }
-    });
-    sectionObserver.observe(container, { childList: true });
+    // Patch removeChild on this container so React doesn't crash on our node.
+    // When React tries to remove a child it doesn't manage (our section),
+    // we catch the error silently instead of letting it propagate.
+    patchRemoveChild(searchResultsEl);
 
     // Wheel → horizontal scroll on the grid
     const grid = section.querySelector('.fankarr-grid');
@@ -726,21 +720,30 @@
   }
 
   /**
-   * Insert section at SECTION_POSITION among the container's children.
-   * Position is 1-based. If position exceeds child count, appends at the end.
+   * Patch removeChild / insertBefore / replaceChild on a container
+   * so React doesn't crash when it encounters our injected node.
    */
-  function insertAtPosition(section, container) {
-    const siblings = Array.from(container.children).filter(
-        el => el.id !== SECTION_ID
-    );
-    const pos = Math.max(1, Math.min(SECTION_POSITION, siblings.length + 1));
-    const refNode = siblings[pos - 1] || null;
+  function patchRemoveChild(container) {
+    if (container._fankarrPatched) return;
+    container._fankarrPatched = true;
 
-    if (refNode) {
-      container.insertBefore(section, refNode);
-    } else {
-      container.appendChild(section);
-    }
+    const origRemoveChild = container.removeChild.bind(container);
+    container.removeChild = function (child) {
+      if (!container.contains(child)) {
+        console.warn('[FanKarr] removeChild intercepté — nœud absent, ignoré.');
+        return child;
+      }
+      return origRemoveChild(child);
+    };
+
+    const origInsertBefore = container.insertBefore.bind(container);
+    container.insertBefore = function (newNode, refNode) {
+      if (refNode && !container.contains(refNode)) {
+        console.warn('[FanKarr] insertBefore intercepté — ref absent, appendChild.');
+        return container.appendChild(newNode);
+      }
+      return origInsertBefore(newNode, refNode);
+    };
   }
 
   function renderResults(section, results) {
@@ -849,9 +852,9 @@
   function ensureSectionExists() {
     if (!lastResults || !lastQuery) return;
     if (document.getElementById(SECTION_ID)) return; // still there
-    const container = document.querySelector('.searchResults');
-    if (!container) return;
-    const section = getOrCreateSection(container);
+    const sr = document.querySelector('.searchResults');
+    if (!sr) return;
+    const section = getOrCreateSection(sr);
     renderResults(section, lastResults);
   }
 
