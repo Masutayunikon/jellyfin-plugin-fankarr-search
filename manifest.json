@@ -8,11 +8,11 @@
     "owner": "toi",
     "versions": [
       {
-        "version": "1.0.0.6",
+        "version": "1.0.0.7",
         "targetAbi": "10.11.8.0",
-        "sourceUrl": "https://github.com/Masutayunikon/jellyfin-plugin-fankarr-search/releases/download/v1.0.0.6/Jellyfin.Plugin.FanKarrSearch_1.0.0.6.zip",
-        "checksum": "5e360dccf99e6d61f3e8ffd76773a0eb",
-        "timestamp": "2026-05-23T00:46:34Z"
+        "sourceUrl": "https://github.com/Masutayunikon/jellyfin-plugin-fankarr-search/releases/download/v1.0.0.7/Jellyfin.Plugin.FanKarrSearch_1.0.0.7.zip",
+        "checksum": "860a8d363d638dcb551dc3440484584e",
+        "timestamp": "2026-05-23T00:53:39Z"
       }
     ]
   }
