@@ -124,7 +124,7 @@
       white-space: nowrap;
     }
 
-    /* ── Modale ── */
+    /* ── Backdrop ── */
     #${MODAL_ID}-backdrop {
       position: fixed;
       inset: 0;
@@ -142,8 +142,10 @@
         align-items: center;
       }
     }
+
+    /* ── Modale ── */
     #${MODAL_ID} {
-      background: var(--theme-body-background-color, #202020);
+      background: var(--card-background, var(--content-background, #202020));
       border-radius: 16px 16px 0 0;
       width: 100%;
       max-width: 500px;
@@ -188,6 +190,7 @@
     #${MODAL_ID} .fankarr-modal-title {
       font-size: 1.1em;
       font-weight: 600;
+      color: var(--text-color, #fff);
     }
     #${MODAL_ID} .fankarr-modal-close {
       margin-left: auto;
@@ -198,21 +201,46 @@
       cursor: pointer;
       padding: 0;
       line-height: 1;
+      flex-shrink: 0;
+    }
+    #${MODAL_ID} .fankarr-modal-close:hover {
+      color: var(--text-color, #fff);
     }
     #${MODAL_ID} .fankarr-modal-subtitle {
       font-size: 0.85em;
       color: var(--text-color-secondary, #aaa);
-      margin-bottom: 1em;
+      margin-top: 0.2em;
+    }
+    #${MODAL_ID} .fankarr-select-all {
+      width: 100%;
+      padding: 0.6em;
+      border: 2px dashed var(--border-color, var(--text-color-secondary, #555));
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text-color-secondary, #aaa);
+      font-size: 0.85em;
+      font-family: var(--font-family, inherit);
+      cursor: pointer;
+      margin-bottom: 0.75em;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    #${MODAL_ID} .fankarr-select-all:hover {
+      border-color: var(--accent-color, var(--accent, #00a4dc));
+      color: var(--accent-color, var(--accent, #00a4dc));
+    }
+    #${MODAL_ID} .fankarr-select-all.selected {
+      border-color: var(--accent-color, var(--accent, #00a4dc));
+      color: var(--accent-color, var(--accent, #00a4dc));
     }
     #${MODAL_ID} .fankarr-seasons-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
       gap: 0.5em;
       margin-bottom: 1.25em;
     }
     #${MODAL_ID} .fankarr-season-btn {
       padding: 0.6em 0.25em;
-      border: 2px solid var(--text-color-secondary, #555);
+      border: 2px solid var(--border-color, var(--text-color-secondary, #555));
       border-radius: 8px;
       background: transparent;
       color: var(--text-color, #fff);
@@ -220,29 +248,15 @@
       font-family: var(--font-family, inherit);
       cursor: pointer;
       text-align: center;
-      transition: border-color 0.15s, background 0.15s;
+      transition: border-color 0.15s, background 0.15s, color 0.15s;
+    }
+    #${MODAL_ID} .fankarr-season-btn:hover {
+      border-color: var(--accent-color, var(--accent, #00a4dc));
     }
     #${MODAL_ID} .fankarr-season-btn.selected {
       border-color: var(--accent-color, var(--accent, #00a4dc));
       background: var(--accent-color, var(--accent, #00a4dc));
       color: #fff;
-    }
-    #${MODAL_ID} .fankarr-select-all {
-      width: 100%;
-      padding: 0.6em;
-      border: 2px dashed var(--text-color-secondary, #555);
-      border-radius: 8px;
-      background: transparent;
-      color: var(--text-color-secondary, #aaa);
-      font-size: 0.8em;
-      font-family: var(--font-family, inherit);
-      cursor: pointer;
-      margin-bottom: 0.75em;
-      transition: border-color 0.15s, color 0.15s;
-    }
-    #${MODAL_ID} .fankarr-select-all.selected {
-      border-color: var(--accent-color, var(--accent, #00a4dc));
-      color: var(--accent-color, var(--accent, #00a4dc));
     }
     #${MODAL_ID} .fankarr-modal-actions {
       display: flex;
@@ -261,6 +275,25 @@
       color: var(--text-color-secondary, #aaa);
       font-size: 0.9em;
     }
+    #${MODAL_ID} .fankarr-modal-success {
+      text-align: center;
+      padding: 2em 1em;
+    }
+    #${MODAL_ID} .fankarr-modal-success-icon {
+      font-size: 2.5em;
+      margin-bottom: 0.4em;
+      color: var(--accent-color, var(--accent, #00a4dc));
+    }
+    #${MODAL_ID} .fankarr-modal-success-title {
+      font-weight: 600;
+      margin-bottom: 0.4em;
+      color: var(--text-color, #fff);
+    }
+    #${MODAL_ID} .fankarr-modal-success-sub {
+      color: var(--text-color-secondary, #aaa);
+      font-size: 0.9em;
+      margin-bottom: 1.5em;
+    }
   `;
 
   function injectStyles() {
@@ -277,51 +310,44 @@
 
   function createModal() {
     if (document.getElementById(`${MODAL_ID}-backdrop`)) return;
-
     const backdrop = document.createElement('div');
     backdrop.id = `${MODAL_ID}-backdrop`;
     backdrop.innerHTML = `<div id="${MODAL_ID}"></div>`;
     document.body.appendChild(backdrop);
-
-    backdrop.addEventListener('click', (e) => {
-      if (e.target === backdrop) closeModal();
-    });
+    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closeModal(); });
   }
 
   function openModal() {
     const backdrop = document.getElementById(`${MODAL_ID}-backdrop`);
-    if (backdrop) {
-      backdrop.classList.add('open');
-      document.body.style.overflow = 'hidden';
-    }
+    if (backdrop) { backdrop.classList.add('open'); document.body.style.overflow = 'hidden'; }
   }
 
   function closeModal() {
     const backdrop = document.getElementById(`${MODAL_ID}-backdrop`);
-    if (backdrop) {
-      backdrop.classList.remove('open');
-      document.body.style.overflow = '';
-    }
+    if (backdrop) { backdrop.classList.remove('open'); document.body.style.overflow = ''; }
   }
 
   async function showRequestModal(item) {
     createModal();
     const modal = document.getElementById(MODAL_ID);
 
-    // Afficher le loader
+    const posterHtml = item.image
+        ? `<img class="fankarr-modal-poster" src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title)}" />`
+        : '';
+
     modal.innerHTML = `
       <div class="fankarr-modal-header">
-        ${item.image ? `<img class="fankarr-modal-poster" src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title)}" />` : ''}
-        <div class="fankarr-modal-title">${escapeHtml(item.title)}</div>
+        ${posterHtml}
+        <div>
+          <div class="fankarr-modal-title">${escapeHtml(item.title)}</div>
+        </div>
         <button class="fankarr-modal-close" aria-label="Fermer">×</button>
       </div>
       <div class="fankarr-modal-loading">Chargement des saisons…</div>
     `;
-
     modal.querySelector('.fankarr-modal-close').addEventListener('click', closeModal);
     openModal();
 
-    // Charger les saisons
     let seasons = [];
     try {
       const data = await apiGet(`/api/v1/series/${item.id}`);
@@ -330,15 +356,17 @@
       console.error('[FanKarr] Erreur chargement saisons :', e);
     }
 
-    // Rendre la modale avec les saisons
     const selectedSeasons = new Set();
 
     function renderModal() {
       const allSelected = seasons.length > 0 && selectedSeasons.size === seasons.length;
+      const submitLabel = selectedSeasons.size === 0
+          ? 'Toute la série'
+          : `${selectedSeasons.size} saison${selectedSeasons.size > 1 ? 's' : ''}`;
 
       modal.innerHTML = `
         <div class="fankarr-modal-header">
-          ${item.image ? `<img class="fankarr-modal-poster" src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title)}" />` : ''}
+          ${posterHtml}
           <div>
             <div class="fankarr-modal-title">${escapeHtml(item.title)}</div>
             <div class="fankarr-modal-subtitle">${seasons.length} saison${seasons.length > 1 ? 's' : ''}</div>
@@ -355,47 +383,32 @@
             <button
               class="fankarr-season-btn${selectedSeasons.has(s.season_number) ? ' selected' : ''}"
               data-season="${s.season_number}"
-            >
-              Saison ${s.season_number}
-            </button>
+            >Saison ${s.season_number}</button>
           `).join('')}
         </div>
 
         <div class="fankarr-modal-actions">
           <button class="fankarr-modal-cancel emby-button raised">Annuler</button>
-          <button class="fankarr-modal-submit emby-button raised button-submit">
-            ${selectedSeasons.size === 0 ? 'Toute la série' : `${selectedSeasons.size} saison${selectedSeasons.size > 1 ? 's' : ''}`}
-          </button>
+          <button class="fankarr-modal-submit emby-button raised button-submit">${submitLabel}</button>
         </div>
       `;
 
       modal.querySelector('.fankarr-modal-close').addEventListener('click', closeModal);
       modal.querySelector('.fankarr-modal-cancel').addEventListener('click', closeModal);
 
-      // Toggle toute la série
       modal.querySelector('.fankarr-select-all').addEventListener('click', () => {
-        if (allSelected) {
-          selectedSeasons.clear();
-        } else {
-          seasons.forEach(s => selectedSeasons.add(s.season_number));
-        }
+        if (allSelected) { selectedSeasons.clear(); } else { seasons.forEach(s => selectedSeasons.add(s.season_number)); }
         renderModal();
       });
 
-      // Toggle saison individuelle
       modal.querySelectorAll('.fankarr-season-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           const n = parseInt(btn.dataset.season);
-          if (selectedSeasons.has(n)) {
-            selectedSeasons.delete(n);
-          } else {
-            selectedSeasons.add(n);
-          }
+          if (selectedSeasons.has(n)) { selectedSeasons.delete(n); } else { selectedSeasons.add(n); }
           renderModal();
         });
       });
 
-      // Soumettre
       modal.querySelector('.fankarr-modal-submit').addEventListener('click', async () => {
         const submitBtn = modal.querySelector('.fankarr-modal-submit');
         submitBtn.disabled = true;
@@ -408,18 +421,16 @@
             seasons: selectedSeasons.size > 0 ? [...selectedSeasons].sort((a, b) => a - b) : [],
           });
 
-          // Succès
-          modal.innerHTML = `
-            <div style="text-align:center;padding:2em 1em;">
-              <div style="font-size:2em;margin-bottom:0.5em;">✓</div>
-              <div style="font-weight:600;margin-bottom:0.5em;">${escapeHtml(item.title)}</div>
-              <div style="color:var(--text-color-secondary,#aaa);font-size:0.9em;">
-                ${selectedSeasons.size === 0
+          const seasonsLabel = selectedSeasons.size === 0
               ? 'Toute la série demandée !'
-              : `Saison${selectedSeasons.size > 1 ? 's' : ''} ${[...selectedSeasons].sort((a, b) => a - b).join(', ')} demandée${selectedSeasons.size > 1 ? 's' : ''} !`
-          }
-              </div>
-              <button class="emby-button raised button-submit" style="margin-top:1.5em;width:100%;">Fermer</button>
+              : `Saison${selectedSeasons.size > 1 ? 's' : ''} ${[...selectedSeasons].sort((a, b) => a - b).join(', ')} demandée${selectedSeasons.size > 1 ? 's' : ''} !`;
+
+          modal.innerHTML = `
+            <div class="fankarr-modal-success">
+              <div class="fankarr-modal-success-icon">✓</div>
+              <div class="fankarr-modal-success-title">${escapeHtml(item.title)}</div>
+              <div class="fankarr-modal-success-sub">${seasonsLabel}</div>
+              <button class="emby-button raised button-submit" style="width:100%;">Fermer</button>
             </div>
           `;
           modal.querySelector('button').addEventListener('click', closeModal);
@@ -428,11 +439,7 @@
           const card = document.querySelector(`[data-fankarr-id="${item.id}"]`);
           if (card) {
             const btn = card.querySelector('.fankarr-btn');
-            if (btn) {
-              btn.textContent = '✓ Demandé';
-              btn.classList.add('button-submit');
-              btn.disabled = true;
-            }
+            if (btn) { btn.textContent = '✓ Demandé'; btn.classList.add('button-submit'); btn.disabled = true; }
           }
         } catch (e) {
           console.error('[FanKarr] Erreur demande :', e);
@@ -449,6 +456,20 @@
   // 6. UI — section et cards
   // ---------------------------------------------------------------------------
 
+  function insertSection(section, container) {
+    const allSections = container.querySelectorAll('.verticalSection');
+    let targetSection = null;
+    for (const s of allSections) {
+      const title = s.querySelector('.sectionTitle')?.textContent?.toLowerCase() || '';
+      if (title.includes('épisode')) { targetSection = s; break; }
+    }
+    if (targetSection) {
+      container.insertBefore(section, targetSection);
+    } else {
+      container.appendChild(section);
+    }
+  }
+
   function getOrCreateSection(container) {
     let section = document.getElementById(SECTION_ID);
     if (!section) {
@@ -461,17 +482,30 @@
         <div class="fankarr-grid"></div>
       `;
 
+      // Essayer d'insérer maintenant
       const allSections = container.querySelectorAll('.verticalSection');
-      let targetSection = null;
+      let found = false;
       for (const s of allSections) {
         const title = s.querySelector('.sectionTitle')?.textContent?.toLowerCase() || '';
-        if (title.includes('épisode')) { targetSection = s; break; }
+        if (title.includes('épisode')) {
+          container.insertBefore(section, s);
+          found = true;
+          break;
+        }
       }
 
-      if (targetSection) {
-        container.insertBefore(section, targetSection);
-      } else {
+      if (!found) {
+        // Pas encore d'Épisodes — attendre et réessayer
         container.appendChild(section);
+        const observer = new MutationObserver(() => {
+          const epSection = Array.from(container.querySelectorAll('.verticalSection'))
+              .find(s => s.querySelector('.sectionTitle')?.textContent?.toLowerCase().includes('épisode'));
+          if (epSection && section.parentNode === container) {
+            container.insertBefore(section, epSection);
+            observer.disconnect();
+          }
+        });
+        observer.observe(container, { childList: true, subtree: false });
       }
     }
     return section;
@@ -492,7 +526,7 @@
       card.innerHTML = `
         <div class="cardBox cardBox-bottompadded">
           <div class="cardScalable">
-            <div class="cardPadder cardPadder-overflowPortrait"></div>
+            <div class="cardPadder cardPadder-portrait"></div>
             ${poster
           ? `<div class="cardImageContainer coveredImage cardContent" style="background-image:url('${escapeHtml(poster)}');"></div>`
           : `<div class="cardImageContainer defaultCardBackground defaultCardBackground1 cardContent">
