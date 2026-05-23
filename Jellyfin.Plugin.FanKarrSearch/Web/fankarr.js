@@ -283,8 +283,8 @@
 
     try {
       await apiPost('/api/v1/requests', {
-        mediaId: item.id,
-        mediaType: item.type,
+        serieId: item.id,
+        serieName: item.title,
       });
       btn.textContent = '✓ Demandé';
       btn.classList.add('requested');
