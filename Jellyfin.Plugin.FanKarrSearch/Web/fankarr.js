@@ -306,17 +306,51 @@
     }
 
     #${MODAL_ID} .fankarr-modal-actions { display: flex; gap: 0.75em; margin-top: 1em; }
+    #${MODAL_ID} .fankarr-modal-cancel,
+    #${MODAL_ID} .fankarr-modal-submit {
+      padding: 0.7em 1em;
+      border-radius: 8px;
+      font-size: 0.9em;
+      font-family: var(--font-family, inherit);
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      outline: none !important;
+      box-shadow: none !important;
+    }
+    #${MODAL_ID} .fankarr-modal-cancel:hover,
+    #${MODAL_ID} .fankarr-modal-cancel:focus,
+    #${MODAL_ID} .fankarr-modal-submit:hover,
+    #${MODAL_ID} .fankarr-modal-submit:focus {
+      background: inherit;
+      border: inherit;
+      color: inherit;
+      opacity: 0.85;
+    }
     #${MODAL_ID} .fankarr-modal-cancel {
       flex: 1;
       background: rgba(255,255,255,0.1) !important;
       color: #fff !important;
-      border: 1px solid rgba(255,255,255,0.2) !important;
+      border: 1px solid rgba(255,255,255,0.15) !important;
+    }
+    #${MODAL_ID} .fankarr-modal-cancel:hover,
+    #${MODAL_ID} .fankarr-modal-cancel:focus {
+      background: rgba(255,255,255,0.15) !important;
+      border: 1px solid rgba(255,255,255,0.15) !important;
+      color: #fff !important;
     }
     #${MODAL_ID} .fankarr-modal-submit {
       flex: 2;
       background: var(--accent-color, var(--accent, #00a4dc)) !important;
       color: #fff !important;
       border: none !important;
+    }
+    #${MODAL_ID} .fankarr-modal-submit:hover,
+    #${MODAL_ID} .fankarr-modal-submit:focus {
+      background: var(--accent-color, var(--accent, #00a4dc)) !important;
+      color: #fff !important;
+      border: none !important;
+      opacity: 0.85;
     }
     #${MODAL_ID} .fankarr-modal-submit:disabled {
       opacity: 0.4;
@@ -331,6 +365,20 @@
       background: var(--accent-color, var(--accent, #00a4dc)) !important;
       color: #fff !important;
       border: none !important;
+      border-radius: 8px;
+      padding: 0.7em 1em;
+      font-size: 0.9em;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    #${MODAL_ID} .fankarr-modal-success button:hover,
+    #${MODAL_ID} .fankarr-modal-success button:focus {
+      background: var(--accent-color, var(--accent, #00a4dc)) !important;
+      color: #fff !important;
+      border: none !important;
+      opacity: 0.85;
+      outline: none !important;
+      box-shadow: none !important;
     }
   `;
 
@@ -535,7 +583,17 @@
             modal.querySelector('button').addEventListener('click', closeModal);
 
             // Update card button label
-            updateCardButton(item.id, [...alreadySet, ...newlyRequested], seasons.length);
+            const allRequested = [...alreadySet, ...newlyRequested];
+            updateCardButton(item.id, allRequested, seasons.length);
+
+            // Update item state so reopening the modal reflects the new request
+            item._wasRequested = true;
+            item._requestedSeasons = allRequested.sort((a, b) => a - b);
+            item.request = {
+              ...(item.request || {}),
+              seasons: item._requestedSeasons,
+              status: item.request?.status || 'pending',
+            };
           } catch (e) {
             console.error('[FanKarr] Erreur demande :', e);
             submitBtn.disabled = false;
