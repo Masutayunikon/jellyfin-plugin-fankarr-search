@@ -20,6 +20,9 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5">
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3">
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <!-- Embed the JS file as a resource so it's packaged in the DLL -->
@@ -27,5 +30,6 @@
     <EmbeddedResource Include="Web\fankarr.js" />
     <EmbeddedResource Include="Web\config.html" />
   </ItemGroup>
+
 
 </Project>

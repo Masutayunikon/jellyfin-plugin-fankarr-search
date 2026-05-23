@@ -1,136 +1,97 @@
 using System.Reflection;
+using System.Runtime.Loader;
 using Jellyfin.Plugin.FanKarrSearch.Configuration;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 
 namespace Jellyfin.Plugin.FanKarrSearch;
 
-/// <summary>
-/// FanKarr plugin entry point.
-/// Injects a small JS loader into Jellyfin's index.html at startup.
-/// The JS then calls the /FanKarr/config endpoint to get the API URL
-/// and hooks into the Jellyfin search UI.
-/// </summary>
 public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 {
+    public static readonly Guid StaticId = Guid.Parse("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
     private readonly ILogger<Plugin> _logger;
 
-    /// <summary>Unique, stable plugin ID.</summary>
-    public static readonly Guid StaticId = Guid.Parse("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
-
-    public Plugin(
-        IApplicationPaths applicationPaths,
-        IXmlSerializer xmlSerializer,
-        ILogger<Plugin> logger)
+    public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger<Plugin> logger)
         : base(applicationPaths, xmlSerializer)
     {
         _logger = logger;
         Instance = this;
-        InjectScript();
+        RegisterScript();
     }
 
-    /// <inheritdoc />
-    public override string Name => "FanKarrSearch";
-
-    /// <inheritdoc />
+    public override string Name => "FanKarr Search";
     public override Guid Id => StaticId;
-
-    /// <inheritdoc />
-    public override string Description => "Intègre FanKarr dans la recherche Jellyfin pour demander des médias.";
-
-    /// <summary>Singleton access used by the controller.</summary>
+    public override string Description => "Intègre FanKarr dans la recherche Jellyfin.";
     public static Plugin? Instance { get; private set; }
 
-    // -------------------------------------------------------------------------
-    // Config page (shown in Dashboard → Plugins → FanKarr)
-    // -------------------------------------------------------------------------
-
-    /// <inheritdoc />
-    public IEnumerable<PluginPageInfo> GetPages()
+    public IEnumerable<PluginPageInfo> GetPages() => new[]
     {
-        return new[]
+        new PluginPageInfo
         {
-            new PluginPageInfo
-            {
-                Name = Name,
-                EmbeddedResourcePath = $"{GetType().Namespace}.Web.config.html",
-                EnableInMainMenu = false
-            }
-        };
-    }
+            Name = Name,
+            EmbeddedResourcePath = $"{GetType().Namespace}.Web.config.html",
+            EnableInMainMenu = false
+        }
+    };
 
-    // -------------------------------------------------------------------------
-    // JS injection into index.html
-    // -------------------------------------------------------------------------
-
-    /// <summary>
-    /// Appends a &lt;script&gt; tag pointing to our API endpoint into
-    /// Jellyfin's index.html so it loads on every page.
-    /// </summary>
-    private void InjectScript()
+    private void RegisterScript()
     {
-        // Jellyfin serves its web client from the "jellyfin-web" folder.
-        // The actual path varies by install type, but IApplicationPaths
-        // exposes WebPath for exactly this purpose.
-        // We look for index.html and inject a <script> tag if not already there.
         try
         {
-            // Use reflection to find the web path — works across Jellyfin versions.
-            var webPath = GetWebPath();
-            if (webPath is null)
+            var jsInjectorAssembly = AssemblyLoadContext.All
+                .SelectMany(x => x.Assemblies)
+                .FirstOrDefault(x => x.FullName?.Contains("Jellyfin.Plugin.JavaScriptInjector") ?? false);
+
+            if (jsInjectorAssembly == null)
             {
-                _logger.LogWarning("[FanKarr] Could not locate Jellyfin web path. JS not injected.");
+                _logger.LogWarning("[FanKarr] JavaScript Injector plugin not found.");
                 return;
             }
 
-            var indexPath = Path.Combine(webPath, "index.html");
-            if (!File.Exists(indexPath))
+            var pluginInterfaceType = jsInjectorAssembly.GetType("Jellyfin.Plugin.JavaScriptInjector.PluginInterface");
+            if (pluginInterfaceType == null)
             {
-                _logger.LogWarning("[FanKarr] index.html not found at {Path}", indexPath);
+                _logger.LogWarning("[FanKarr] PluginInterface type not found.");
                 return;
             }
 
-            var content = File.ReadAllText(indexPath);
-            const string Marker = "<!-- fankarr-injected -->";
-
-            if (content.Contains(Marker))
+            // Lire le JS embarqué
+            var assembly = Assembly.GetExecutingAssembly();
+            using var stream = assembly.GetManifestResourceStream("Jellyfin.Plugin.FanKarrSearch.Web.fankarr.js");
+            if (stream == null)
             {
-                _logger.LogInformation("[FanKarr] Script already injected, skipping.");
+                _logger.LogWarning("[FanKarr] fankarr.js resource not found.");
                 return;
             }
+            using var reader = new StreamReader(stream);
+            var scriptContent = reader.ReadToEnd();
 
-            // Inject just before </body> — minimal footprint.
-            var tag = $"\n{Marker}\n<script src=\"/FanKarrSearch/script.js\" defer></script>\n";
-            var newContent = content.Replace("</body>", tag + "</body>", StringComparison.OrdinalIgnoreCase);
+            var registration = new JObject
+            {
+                { "id", $"{Id}-fankarr-search" },
+                { "name", "FanKarr Search" },
+                { "script", scriptContent },
+                { "enabled", true },
+                { "requiresAuthentication", true },
+                { "pluginId", Id.ToString() },
+                { "pluginName", Name },
+                { "pluginVersion", Version.ToString() }
+            };
 
-            File.WriteAllText(indexPath, newContent);
-            _logger.LogInformation("[FanKarrSearch] Script injected into {Path}", indexPath);
+            var result = pluginInterfaceType.GetMethod("RegisterScript")?.Invoke(null, new object[] { registration });
+
+            if (result is bool success && success)
+                _logger.LogInformation("[FanKarr] Script registered with JavaScript Injector.");
+            else
+                _logger.LogWarning("[FanKarr] Failed to register script.");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "[FanKarrSearch] Failed to inject script into index.html");
+            _logger.LogError(ex, "[FanKarr] Error registering script.");
         }
-    }
-
-    private static string? GetWebPath()
-    {
-        // Try common paths across Docker / Linux / Windows installs.
-        var candidates = new[]
-        {
-            "/usr/share/jellyfin/web",
-            "/jellyfin/jellyfin-web",
-            @"C:\Program Files\Jellyfin\Server\jellyfin-web",
-        };
-
-        foreach (var path in candidates)
-        {
-            if (Directory.Exists(path) && File.Exists(Path.Combine(path, "index.html")))
-                return path;
-        }
-
-        return null;
     }
 }
