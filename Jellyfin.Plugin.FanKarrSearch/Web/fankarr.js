@@ -460,7 +460,13 @@
     if (!section) {
       section = document.createElement('div');
       section.id = SECTION_ID;
-      section.innerHTML = `...`; // ton HTML habituel
+      section.innerHTML = `
+        <h2 class="sectionTitle sectionTitle-cards focuscontainer-x padded-left padded-right fankarr-section-title">
+          Découvrir sur FanKaï
+          <img class="fankarr-logo" src="${FANKAI_LOGO}" alt="FanKaï" />
+        </h2>
+        <div class="fankarr-grid padded-left"></div>
+      `;
 
       // Essai immédiat
       if (!insertBeforeEpisodes(section, container)) {
