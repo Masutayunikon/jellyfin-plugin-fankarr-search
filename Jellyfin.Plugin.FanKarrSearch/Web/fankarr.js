@@ -792,6 +792,7 @@
 
   let searchTimeout = null;
   let lastQuery = '';
+  let lastResults = null; // cache for re-injection
 
   // Wait for .searchResults to appear in the DOM (max ~3s)
   function waitForSearchResults(maxWait = 3000) {
@@ -812,13 +813,29 @@
     });
   }
 
-  async function onSearch(query) {
+  // Re-inject cached results if our section was destroyed (Jellyfin rebuilt .searchResults)
+  function ensureSectionExists() {
+    if (!lastResults || !lastQuery) return;
+    if (document.getElementById(SECTION_ID)) return; // still there
+    const container = document.querySelector('.searchResults');
+    if (!container) return;
+    const section = getOrCreateSection(container);
+    renderResults(section, lastResults);
+  }
+
+  async function onSearch(query, force = false) {
     if (!query || query.length < 2) {
       const existing = document.getElementById(SECTION_ID);
       if (existing) existing.remove();
+      lastQuery = '';
+      lastResults = null;
       return;
     }
-    if (query === lastQuery) return;
+    if (query === lastQuery && !force) {
+      // Same query but section might have been destroyed
+      ensureSectionExists();
+      return;
+    }
     lastQuery = query;
 
     try {
@@ -836,9 +853,11 @@
       if (!results || results.length === 0) {
         const existing = document.getElementById(SECTION_ID);
         if (existing) existing.remove();
+        lastResults = null;
         return;
       }
 
+      lastResults = results;
       const section = getOrCreateSection(realContainer);
       renderResults(section, results);
     } catch (e) {
@@ -876,8 +895,13 @@
   }
 
   const observer = new MutationObserver(() => {
-    if (isSearchPage()) { injectStyles(); attachInputListener(); }
-    else { inputListenerAttached = false; lastQuery = ''; closeModal(); }
+    if (isSearchPage()) {
+      injectStyles();
+      attachInputListener();
+      // Re-inject if Jellyfin rebuilt .searchResults and our section is gone
+      ensureSectionExists();
+    }
+    else { inputListenerAttached = false; lastQuery = ''; lastResults = null; closeModal(); }
   });
 
   observer.observe(document.body, { childList: true, subtree: true });
