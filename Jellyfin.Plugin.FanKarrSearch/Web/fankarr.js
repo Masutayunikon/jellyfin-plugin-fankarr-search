@@ -345,28 +345,24 @@
   // 6. Observer — détecte la page de recherche et l'input
   // ---------------------------------------------------------------------------
 
-  function findSearchContainer() {
-    // Jellyfin 10.11 : la page de résultats de recherche utilise ces sélecteurs
-    return (
-      document.querySelector('.searchResults') ||
-      document.querySelector('[data-type="search"]') ||
-      document.querySelector('.itemsContainer')
-    );
+  function findSearchInput() {
+    return document.querySelector('#searchTextInput');
   }
 
-  function findSearchInput() {
+  function findSearchContainer() {
+    // Cherche le conteneur parent de la page de recherche
     return (
-      document.querySelector('input[type="search"]') ||
-      document.querySelector('.searchfield input') ||
-      document.querySelector('#searchInput')
+        document.querySelector('.searchResults') ||
+        document.querySelector('.padded-left.padded-right') ||
+        document.querySelector('.itemsContainer')?.closest('.pageTabContent, .tabContent, [data-role="page"]') ||
+        document.querySelector('#searchTextInput')?.closest('[data-role="page"]')
     );
   }
 
   function isSearchPage() {
     return (
-      window.location.hash.includes('search') ||
-      window.location.pathname.includes('search') ||
-      !!document.querySelector('.searchResults')
+        window.location.hash.includes('search') ||
+        !!document.querySelector('#searchTextInput')
     );
   }
 
