@@ -102,15 +102,23 @@
       filter: brightness(0) saturate(100%) invert(80%) sepia(60%) saturate(400%) hue-rotate(5deg) brightness(105%);
     }
     #${SECTION_ID} .fankarr-grid {
-      display: flex;
-      flex-wrap: wrap;
-      row-gap: 0.5em;
-      column-gap: 0;
+      display: flex !important;
+      flex-wrap: nowrap !important;
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      gap: 0.5em;
+      padding-bottom: 0.5em;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    #${SECTION_ID} .fankarr-grid::-webkit-scrollbar {
+      display: none;
     }
     #${SECTION_ID} .fankarr-card {
       position: relative;
       cursor: pointer;
-      margin-right: 0.5em;
+      flex-shrink: 0 !important;
+      width: 150px;
     }
     #${SECTION_ID} .fankarr-badge {
       position: absolute;
