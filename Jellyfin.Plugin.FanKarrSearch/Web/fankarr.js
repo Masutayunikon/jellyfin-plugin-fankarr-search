@@ -160,14 +160,17 @@
     }
     #${SECTION_ID} .fankarr-btn {
       width: 90%;
-      font-size: 0.72em;
-      padding: 0.45em 0.25em;
+      font-size: 0.82em;
+      padding: 0.5em 0.4em;
       white-space: nowrap;
       display: flex !important;
       align-items: center;
       justify-content: center;
-      gap: 0.3em;
+      gap: 0.35em;
       color: #fff !important;
+      background: var(--accent-color, var(--accent, #00a4dc)) !important;
+      border: none !important;
+      border-radius: 6px;
     }
     #${SECTION_ID} .fankarr-card .cardText-first {
       overflow: hidden;
@@ -500,8 +503,7 @@
           submitBtn.disabled = true;
           submitBtn.textContent = '…';
           try {
-            // If in add-mode, only send the newly selected seasons.
-            // If fresh request with no selection, send [] to mean "whole series".
+            // Send only the newly selected seasons — the API merges (upsert)
             const seasonsToSend = selectedSeasons.size > 0
                 ? [...selectedSeasons].sort((a, b) => a - b)
                 : [];
@@ -513,9 +515,14 @@
             });
 
             const newlyRequested = [...selectedSeasons].sort((a, b) => a - b);
-            const seasonsLabel = newlyRequested.length === 0
-                ? 'Toute la série demandée !'
-                : `Saison${newlyRequested.length > 1 ? 's' : ''} ${newlyRequested.join(', ')} demandée${newlyRequested.length > 1 ? 's' : ''} !`;
+            let seasonsLabel;
+            if (newlyRequested.length === 0) {
+              seasonsLabel = 'Toute la série demandée !';
+            } else if (isAddMode) {
+              seasonsLabel = `Saison${newlyRequested.length > 1 ? 's' : ''} ${newlyRequested.join(', ')} ajoutée${newlyRequested.length > 1 ? 's' : ''} !`;
+            } else {
+              seasonsLabel = `Saison${newlyRequested.length > 1 ? 's' : ''} ${newlyRequested.join(', ')} demandée${newlyRequested.length > 1 ? 's' : ''} !`;
+            }
 
             modal.innerHTML = `
               <div class="fankarr-modal-success">
@@ -588,23 +595,23 @@
     return section;
   }
 
-  function renderResults(section, results, requestedMap) {
+  function renderResults(section, results) {
     const grid = section.querySelector('.fankarr-grid');
     if (!grid) return;
     grid.innerHTML = '';
 
     results.forEach(item => {
-      // requestedMap: Map<serieId, number[]>
-      // undefined  → never requested
-      // []         → whole series requested
-      // [1,2]      → specific seasons requested
-      const requestedSeasons = requestedMap.get(item.id); // undefined | number[]
-      const wasRequested = requestedSeasons !== undefined;
+      // item.request: null → never requested
+      // item.request.seasons: [] → whole series requested
+      // item.request.seasons: [1,2] → specific seasons requested
+      const req = item.request;
+      const wasRequested = req != null;
+      const requestedSeasons = wasRequested ? (req.seasons || []) : [];
       const wholeSeriesRequested = wasRequested && requestedSeasons.length === 0;
 
       // Enrich item with request state for modal
       item._wasRequested = wasRequested;
-      item._requestedSeasons = requestedSeasons || [];
+      item._requestedSeasons = requestedSeasons;
 
       const poster = item.image || (item.posterPath ? `https://image.tmdb.org/t/p/w200${item.posterPath}` : null);
       const year = item.year || '';
@@ -670,21 +677,6 @@
   let searchTimeout = null;
   let lastQuery = '';
 
-  // Returns a Map<serieId, number[]>
-  // number[] = [] means whole series, [1,2,...] means specific seasons
-  async function fetchRequestedMap() {
-    try {
-      const data = await apiGet('/api/v1/requests');
-      const items = data.results || data || [];
-      const map = new Map();
-      items.forEach(r => {
-        const id = r.serieId || r.media?.id || r.mediaId;
-        if (id != null) map.set(id, r.seasons || []);
-      });
-      return map;
-    } catch { return new Map(); }
-  }
-
   // Wait for .searchResults to appear in the DOM (max ~3s)
   function waitForSearchResults(maxWait = 3000) {
     return new Promise(resolve => {
@@ -714,9 +706,8 @@
     lastQuery = query;
 
     try {
-      const [searchData, requestedMap, realContainer] = await Promise.all([
+      const [searchData, realContainer] = await Promise.all([
         apiGet(`/api/v1/series/search?q=${encodeURIComponent(query)}`),
-        fetchRequestedMap(),
         waitForSearchResults(),
       ]);
 
@@ -733,7 +724,7 @@
       }
 
       const section = getOrCreateSection(realContainer);
-      renderResults(section, results, requestedMap);
+      renderResults(section, results);
     } catch (e) {
       console.error('[FanKarr] Erreur recherche :', e);
       const existing = document.getElementById(SECTION_ID);
