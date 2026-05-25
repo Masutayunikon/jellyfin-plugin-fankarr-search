@@ -39,10 +39,6 @@ http://localhost:9898
 
 Sans slash final. Adaptez l'adresse et le port selon votre configuration.
 
-### 4. Ajouter le script dans JavaScript Injector
-
-Allez dans les paramètres de **JavaScript Injector** et ajoutez le lien vers le script FanKarr fourni par le plugin.
-
 ---
 
 ## ⚠️ HTTPS et mixed content
