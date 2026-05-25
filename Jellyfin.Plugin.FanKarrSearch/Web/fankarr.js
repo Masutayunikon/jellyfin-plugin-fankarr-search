@@ -823,23 +823,34 @@
   let lastQuery = '';
   let lastResults = null; // cache for re-injection
 
-  // Jellyfin search container varies by version/theme/plugin.
-  // Try multiple selectors in priority order.
-  const SEARCH_CONTAINER_SELECTORS = [
-    '.searchResults',
-    '#smart-search-results',
-    '.smart-search-results',
-    '#searchPage > .padded-left',
-    '[data-role="page"].searchPage [data-role="content"]',
-    '#searchPage',
-  ];
-
+  /**
+   * Find the container where Jellyfin renders search result sections.
+   * Instead of hardcoding selectors that vary by theme/version,
+   * we find a .verticalSection inside the search page and use its parent.
+   * This works across all themes because Jellyfin always renders results
+   * as .verticalSection children of a common container.
+   */
   function findSearchResultsContainer() {
-    for (const sel of SEARCH_CONTAINER_SELECTORS) {
-      const el = document.querySelector(sel);
-      if (el) return el;
+    // First, make sure we're on a search page
+    const searchPage =
+        document.querySelector('#searchPage') ||
+        document.querySelector('.searchResultsPage') ||
+        document.querySelector('[data-type="search"]') ||
+        document.querySelector('[data-role="page"].page:has(#searchTextInput)');
+
+    if (!searchPage) return null;
+
+    // Find a real Jellyfin section inside it and return its parent
+    const existingSection = searchPage.querySelector('.verticalSection');
+    if (existingSection && existingSection.parentElement) {
+      return existingSection.parentElement;
     }
-    return null;
+
+    // Fallback: known containers
+    return searchPage.querySelector('.searchResults')
+        || searchPage.querySelector('#smart-search-results')
+        || searchPage.querySelector('.smart-search-results')
+        || null;
   }
 
   // Wait for a search container to appear in the DOM (max ~3s)
@@ -893,7 +904,7 @@
       ]);
 
       if (!realContainer) {
-        console.warn('[FanKarr] .searchResults introuvable, injection annulée.');
+        console.warn('[FanKarr] Aucun container de recherche trouvé, injection annulée.');
         return;
       }
 
@@ -919,37 +930,78 @@
   // 8. Observer
   // ---------------------------------------------------------------------------
 
-  function findSearchInput() { return document.querySelector('#searchTextInput'); }
+  function findSearchInput() {
+    return document.querySelector('#searchTextInput')
+        || document.querySelector('input[type="search"]')
+        || document.querySelector('input[name="search"]');
+  }
 
   function isSearchPage() {
-    return window.location.hash.includes('search') || !!document.querySelector('#searchTextInput');
+    const hash = window.location.hash || '';
+    if (hash.includes('search')) return true;
+    if (document.querySelector('#searchPage')) return true;
+    if (document.querySelector('.searchResultsPage')) return true;
+    if (findSearchInput()) return true;
+    return false;
   }
 
   let inputListenerAttached = false;
+  let currentInput = null; // track which input element we're attached to
 
   function attachInputListener() {
-    if (inputListenerAttached) return;
     const input = findSearchInput();
     if (!input) return;
+
+    // If Jellyfin recreated the input (new DOM node), re-attach
+    if (input !== currentInput) {
+      inputListenerAttached = false;
+      currentInput = input;
+    }
+
+    if (inputListenerAttached) return;
     inputListenerAttached = true;
+
     input.addEventListener('input', () => {
       clearTimeout(searchTimeout);
       const query = input.value.trim();
       searchTimeout = setTimeout(() => onSearch(query), 400);
     });
+
+    // Trigger search if input already has a value (e.g. page re-render)
     if (input.value) {
-      onSearch(input.value.trim());
+      const query = input.value.trim();
+      if (query.length >= 2) {
+        onSearch(query);
+      }
     }
   }
+
+  // Jellyfin emits 'viewshow' when navigating between pages
+  document.addEventListener('viewshow', () => {
+    if (isSearchPage()) {
+      injectStyles();
+      attachInputListener();
+    } else {
+      inputListenerAttached = false;
+      currentInput = null;
+      lastQuery = '';
+      lastResults = null;
+      closeModal();
+    }
+  });
 
   const observer = new MutationObserver(() => {
     if (isSearchPage()) {
       injectStyles();
       attachInputListener();
-      // Re-inject if Jellyfin rebuilt .searchResults and our section is gone
       ensureSectionExists();
+    } else {
+      inputListenerAttached = false;
+      currentInput = null;
+      lastQuery = '';
+      lastResults = null;
+      closeModal();
     }
-    else { inputListenerAttached = false; lastQuery = ''; lastResults = null; closeModal(); }
   });
 
   observer.observe(document.body, { childList: true, subtree: true });
