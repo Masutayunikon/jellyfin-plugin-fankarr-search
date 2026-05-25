@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
+<PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <AssemblyName>Jellyfin.Plugin.FanKarrSearch</AssemblyName>
     <RootNamespace>Jellyfin.Plugin.FanKarrSearch</RootNamespace>
@@ -8,7 +8,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-  </PropertyGroup>
+    <AssemblyVersion>1.0.6.11</AssemblyVersion>
+    <FileVersion>1.0.6.11</FileVersion>
+    <Version>1.0.6.11</Version>
+</PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Jellyfin.Controller" Version="10.11.3">

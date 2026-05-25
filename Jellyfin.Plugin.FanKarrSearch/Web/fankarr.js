@@ -638,7 +638,7 @@
   // 6. UI — section et cards
   // ---------------------------------------------------------------------------
 
-  function getOrCreateSection(searchResultsEl) {
+  function getOrCreateSection(searchPage) {
     let section = document.getElementById(SECTION_ID);
     if (section) return section;
 
@@ -652,25 +652,33 @@
       <div class="fankarr-grid padded-left"></div>
     `;
 
-    // Insert at the configured position among searchResults children
-    const siblings = Array.from(searchResultsEl.children).filter(el => el.id !== SECTION_ID);
-    const pos = Math.max(1, Math.min(SECTION_POSITION, siblings.length + 1));
-    const refNode = siblings[pos - 1] || null;
+    // Collect all verticalSection + searchResults as "sections" for positioning.
+    // These are the siblings we want to position among.
+    const sections = Array.from(searchPage.children).filter(
+        el => el.id !== SECTION_ID && (
+            el.classList.contains('verticalSection') ||
+            el.classList.contains('searchResults') ||
+            el.classList.contains('smart-search-results') ||
+            el.id === 'smart-search-results'
+        )
+    );
+
+    const pos = Math.max(1, Math.min(SECTION_POSITION, sections.length + 1));
+    const refNode = sections[pos - 1] || null;
+
     if (refNode) {
-      searchResultsEl.insertBefore(section, refNode);
+      searchPage.insertBefore(section, refNode);
+    } else if (sections.length > 0) {
+      // After all sections
+      const lastSection = sections[sections.length - 1];
+      lastSection.after(section);
     } else {
-      searchResultsEl.appendChild(section);
+      searchPage.appendChild(section);
     }
 
-    // Patch removeChild on this container so React doesn't crash on our node.
-    // When React tries to remove a child it doesn't manage (our section),
-    // we catch the error silently instead of letting it propagate.
-    patchRemoveChild(searchResultsEl);
-
-    // Wheel → horizontal scroll on the grid
+    // Click-drag → horizontal scroll on the grid
     const grid = section.querySelector('.fankarr-grid');
     if (grid) {
-      // Click-drag → horizontal scroll
       let isDragging = false;
       let startX = 0;
       let scrollStart = 0;
@@ -711,33 +719,6 @@
     }
 
     return section;
-  }
-
-  /**
-   * Patch removeChild / insertBefore / replaceChild on a container
-   * so React doesn't crash when it encounters our injected node.
-   */
-  function patchRemoveChild(container) {
-    if (container._fankarrPatched) return;
-    container._fankarrPatched = true;
-
-    const origRemoveChild = container.removeChild.bind(container);
-    container.removeChild = function (child) {
-      if (!container.contains(child)) {
-        console.warn('[FanKarr] removeChild intercepté — nœud absent, ignoré.');
-        return child;
-      }
-      return origRemoveChild(child);
-    };
-
-    const origInsertBefore = container.insertBefore.bind(container);
-    container.insertBefore = function (newNode, refNode) {
-      if (refNode && !container.contains(refNode)) {
-        console.warn('[FanKarr] insertBefore intercepté — ref absent, appendChild.');
-        return container.appendChild(newNode);
-      }
-      return origInsertBefore(newNode, refNode);
-    };
   }
 
   function renderResults(section, results) {
@@ -824,49 +805,34 @@
   let lastResults = null; // cache for re-injection
 
   /**
-   * Find the container where Jellyfin renders search result sections.
-   * Instead of hardcoding selectors that vary by theme/version,
-   * we find a .verticalSection inside the search page and use its parent.
-   * This works across all themes because Jellyfin always renders results
-   * as .verticalSection children of a common container.
+   * Find the search page container where verticalSection elements live.
+   * We inject as a sibling of .verticalSection inside #searchPage.
    */
-  function findSearchResultsContainer() {
-    // First, make sure we're on a search page
-    const searchPage =
-        document.querySelector('#searchPage') ||
-        document.querySelector('.searchResultsPage') ||
-        document.querySelector('[data-type="search"]') ||
-        document.querySelector('[data-role="page"].page:has(#searchTextInput)');
-
-    if (!searchPage) return null;
-
-    // Find a real Jellyfin section inside it and return its parent
-    const existingSection = searchPage.querySelector('.verticalSection');
-    if (existingSection && existingSection.parentElement) {
-      return existingSection.parentElement;
-    }
-
-    // Fallback: known containers
-    return searchPage.querySelector('.searchResults')
-        || searchPage.querySelector('#smart-search-results')
-        || searchPage.querySelector('.smart-search-results')
+  function findSearchPage() {
+    return document.querySelector('#searchPage')
+        || document.querySelector('.searchResultsPage')
+        || document.querySelector('[data-type="search"]')
+        || document.querySelector('[data-role="page"]:has(#searchTextInput)')
         || null;
   }
 
-  // Wait for a search container to appear in the DOM (max ~3s)
+  // Wait for at least one section to appear in #searchPage (max ~3s)
   function waitForSearchResults(maxWait = 3000) {
     return new Promise(resolve => {
-      const existing = findSearchResultsContainer();
-      if (existing) return resolve(existing);
+      const page = findSearchPage();
+      if (page && page.querySelector('.verticalSection, .searchResults, .smart-search-results, #smart-search-results')) {
+        return resolve(page);
+      }
 
       const interval = 100;
       let elapsed = 0;
       const timer = setInterval(() => {
-        const el = findSearchResultsContainer();
+        const p = findSearchPage();
+        const hasSection = p && p.querySelector('.verticalSection, .searchResults, .smart-search-results, #smart-search-results');
         elapsed += interval;
-        if (el || elapsed >= maxWait) {
+        if (hasSection || elapsed >= maxWait) {
           clearInterval(timer);
-          resolve(el || null);
+          resolve(hasSection ? p : null);
         }
       }, interval);
     });
@@ -876,9 +842,11 @@
   function ensureSectionExists() {
     if (!lastResults || !lastQuery) return;
     if (document.getElementById(SECTION_ID)) return; // still there
-    const sr = findSearchResultsContainer();
-    if (!sr) return;
-    const section = getOrCreateSection(sr);
+    const page = findSearchPage();
+    if (!page) return;
+    // Only re-inject if there are verticalSections to anchor to
+    if (!page.querySelector('.verticalSection, .searchResults, .smart-search-results, #smart-search-results')) return;
+    const section = getOrCreateSection(page);
     renderResults(section, lastResults);
   }
 
