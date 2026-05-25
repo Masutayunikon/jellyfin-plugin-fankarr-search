@@ -670,12 +670,6 @@
     // Wheel → horizontal scroll on the grid
     const grid = section.querySelector('.fankarr-grid');
     if (grid) {
-      grid.addEventListener('wheel', (e) => {
-        if (e.deltaY === 0) return;
-        e.preventDefault();
-        grid.scrollLeft += e.deltaY;
-      }, { passive: false });
-
       // Click-drag → horizontal scroll
       let isDragging = false;
       let startX = 0;
@@ -829,16 +823,35 @@
   let lastQuery = '';
   let lastResults = null; // cache for re-injection
 
-  // Wait for .searchResults to appear in the DOM (max ~3s)
+  // Jellyfin search container varies by version/theme/plugin.
+  // Try multiple selectors in priority order.
+  const SEARCH_CONTAINER_SELECTORS = [
+    '.searchResults',
+    '#smart-search-results',
+    '.smart-search-results',
+    '#searchPage > .padded-left',
+    '[data-role="page"].searchPage [data-role="content"]',
+    '#searchPage',
+  ];
+
+  function findSearchResultsContainer() {
+    for (const sel of SEARCH_CONTAINER_SELECTORS) {
+      const el = document.querySelector(sel);
+      if (el) return el;
+    }
+    return null;
+  }
+
+  // Wait for a search container to appear in the DOM (max ~3s)
   function waitForSearchResults(maxWait = 3000) {
     return new Promise(resolve => {
-      const existing = document.querySelector('.searchResults');
+      const existing = findSearchResultsContainer();
       if (existing) return resolve(existing);
 
       const interval = 100;
       let elapsed = 0;
       const timer = setInterval(() => {
-        const el = document.querySelector('.searchResults');
+        const el = findSearchResultsContainer();
         elapsed += interval;
         if (el || elapsed >= maxWait) {
           clearInterval(timer);
@@ -848,11 +861,11 @@
     });
   }
 
-  // Re-inject cached results if our section was destroyed (Jellyfin rebuilt .searchResults)
+  // Re-inject cached results if our section was destroyed
   function ensureSectionExists() {
     if (!lastResults || !lastQuery) return;
     if (document.getElementById(SECTION_ID)) return; // still there
-    const sr = document.querySelector('.searchResults');
+    const sr = findSearchResultsContainer();
     if (!sr) return;
     const section = getOrCreateSection(sr);
     renderResults(section, lastResults);
