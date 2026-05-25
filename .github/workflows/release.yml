@@ -25,8 +25,7 @@ jobs:
 
       - name: Update build.yaml version
         run: |
-          sed -i "s/^version: .*/version: \"${VERSION}\"/" \
-            Jellyfin.Plugin.FanKarrSearch/build.yaml
+            sed -i "s/^version: .*/version: \"${VERSION}\"/" build.yaml
 
       - name: Dotnet publish
         run: |
