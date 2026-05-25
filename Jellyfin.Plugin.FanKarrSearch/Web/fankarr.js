@@ -652,29 +652,19 @@
       <div class="fankarr-grid padded-left"></div>
     `;
 
-    // Collect all verticalSection + searchResults as "sections" for positioning.
-    // These are the siblings we want to position among.
-    const sections = Array.from(searchPage.children).filter(
-        el => el.id !== SECTION_ID && (
-            el.classList.contains('verticalSection') ||
-            el.classList.contains('searchResults') ||
-            el.classList.contains('smart-search-results') ||
-            el.id === 'smart-search-results'
-        )
-    );
+    // Insert at the right position (or append and reposition later)
+    positionSection(section, searchPage);
 
-    const pos = Math.max(1, Math.min(SECTION_POSITION, sections.length + 1));
-    const refNode = sections[pos - 1] || null;
-
-    if (refNode) {
-      searchPage.insertBefore(section, refNode);
-    } else if (sections.length > 0) {
-      // After all sections
-      const lastSection = sections[sections.length - 1];
-      lastSection.after(section);
-    } else {
-      searchPage.appendChild(section);
-    }
+    // If no verticalSections were found yet, retry positioning every 500ms for 5s
+    let retries = 0;
+    const maxRetries = 10;
+    const repositionTimer = setInterval(() => {
+      retries++;
+      const moved = positionSection(section, searchPage);
+      if (moved || retries >= maxRetries) {
+        clearInterval(repositionTimer);
+      }
+    }, 500);
 
     // Click-drag → horizontal scroll on the grid
     const grid = section.querySelector('.fankarr-grid');
@@ -719,6 +709,40 @@
     }
 
     return section;
+  }
+
+  /**
+   * Position (or reposition) the FanKarr section among verticalSection siblings.
+   * Returns true if positioned among real sections, false if just appended.
+   */
+  function positionSection(section, searchPage) {
+    const sections = Array.from(searchPage.children).filter(
+        el => el.id !== SECTION_ID && (
+            el.classList.contains('verticalSection') ||
+            el.classList.contains('searchResults') ||
+            el.classList.contains('smart-search-results') ||
+            el.id === 'smart-search-results'
+        )
+    );
+
+    if (sections.length === 0) {
+      // No sections yet — append if not already in the DOM
+      if (!section.parentNode) {
+        searchPage.appendChild(section);
+      }
+      return false;
+    }
+
+    const pos = Math.max(1, Math.min(SECTION_POSITION, sections.length + 1));
+    const refNode = sections[pos - 1] || null;
+
+    if (refNode) {
+      searchPage.insertBefore(section, refNode);
+    } else {
+      const lastSection = sections[sections.length - 1];
+      lastSection.after(section);
+    }
+    return true;
   }
 
   function renderResults(section, results) {
