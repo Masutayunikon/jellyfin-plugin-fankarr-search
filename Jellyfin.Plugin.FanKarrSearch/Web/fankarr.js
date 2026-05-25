@@ -716,7 +716,15 @@
    * Returns true if positioned among real sections, false if just appended.
    */
   function positionSection(section, searchPage) {
-    const sections = Array.from(searchPage.children).filter(
+    // If verticalSections are nested inside a wrapper (e.g. .searchResults), inject
+    // inside that wrapper so FanKarr is a sibling of the verticalSections, not of the wrapper.
+    let container = searchPage;
+    const firstVertical = searchPage.querySelector('.verticalSection');
+    if (firstVertical && firstVertical.parentElement && firstVertical.parentElement !== searchPage) {
+      container = firstVertical.parentElement;
+    }
+
+    const sections = Array.from(container.children).filter(
         el => el.id !== SECTION_ID && (
             el.classList.contains('verticalSection') ||
             el.classList.contains('searchResults') ||
@@ -737,7 +745,7 @@
     const refNode = sections[pos - 1] || null;
 
     if (refNode) {
-      searchPage.insertBefore(section, refNode);
+      container.insertBefore(section, refNode);
     } else {
       const lastSection = sections[sections.length - 1];
       lastSection.after(section);
